@@ -1,0 +1,36 @@
+{
+  "name": "Daily Strategy Analysis",
+  "schedule": "0 9 * * 1-5",
+  "steps": [
+    {
+      "action": "read_github",
+      "repo": "tu-usuario/trading-strategies",
+      "files": ["strategies/*.py"]
+    },
+    {
+      "action": "analyze_with_claude",
+      "prompt": "Analyze these strategies using quant metrics...",
+      "output": "signal_decision"
+    },
+    {
+      "action": "commit_to_github",
+      "file": "signals/today_signal.json",
+      "content": "{{signal_decision}}"
+    },
+    {
+      "action": "trigger_webhook",
+      "url": "https://YOUR_NGROK_URL.ngrok-free.app/webhook",
+      "headers": {
+        "X-Webhook-Secret": "YOUR_SECURE_SECRET_FROM_ENV",
+        "Content-Type": "application/json"
+      },
+      "payload": {
+        "strategy_id": "{{strategy_id}}",
+        "symbol": "{{symbol}}",
+        "action": "{{action}}",
+        "confidence": "{{confidence}}",
+        "params": "{{params}}"
+      }
+    }
+  ]
+}
