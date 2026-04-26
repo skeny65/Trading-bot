@@ -3,8 +3,8 @@ import os
 from datetime import datetime
 from typing import Dict, List, Optional
 from dataclasses import dataclass, asdict
-from alpaca_data_source import AlpacaDataSource
-from regret_calculator import RegretCalculator, RegretResult
+from core.alpaca_data_source import AlpacaDataSource
+from core.regret_calculator import RegretCalculator, RegretResult
 from core.trade_query import TradeQuery
 
 class HindsightEngine:

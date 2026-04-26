@@ -16,6 +16,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Optional
 from contextlib import asynccontextmanager
 
+import uvicorn
 from fastapi import FastAPI, HTTPException, Header, Request
 from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import BaseModel
@@ -300,3 +301,6 @@ async def get_dashboard():
     if os.path.exists(dashboard_path):
         return FileResponse(dashboard_path)
     raise HTTPException(status_code=404, detail="dashboard no disponible")
+
+if __name__ == "__main__":
+    uvicorn.run("bot:app", host="0.0.0.0", port=8000, reload=True)
