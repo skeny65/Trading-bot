@@ -138,6 +138,9 @@ class TradingViewBridge:
     async def handle_payload(self, payload: Dict) -> Tuple[Dict, int]:
         self._roll_day()
 
+        # Evaluar outcomes por precio de mercado antes de procesar la nueva señal
+        self._evaluate_outcomes()
+
         try:
             symbol = self._normalize_symbol(str(payload.get("symbol", "")))
             action = str(payload.get("action", "")).lower().strip()
@@ -185,10 +188,23 @@ class TradingViewBridge:
 
     async def _handle_entry(self, payload: Dict, symbol: str, action: str, setup: str) -> Tuple[Dict, int]:
         strategy_id = self._strategy_id_for_setup(setup)
-        # sell y close cierran la posición (TV envía sell cuando toca SL/TP).
-        # Alpaca crypto NO soporta bracket orders, así que el cierre lo gestiona TV via alertas.
+
+        # MODO ESTUDIO: sell solo registra en paper_signals para analizar la estrategia.
+        # No cierra ni abre nada en Alpaca. El usuario cierra manualmente.
         if action == "sell":
-            return await self._handle_close(symbol, setup)
+            entry = self._as_float(payload.get("price"))
+            sl = self._as_float(payload.get("sl"))
+            tp = self._as_float(payload.get("tp"))
+            self._register_paper_signal(payload, symbol, action, setup, executed=False, skip_reason="study_mode_sell_logged")
+            self._log_text("SELL_SIGNAL", symbol, setup, f"entry={entry} sl={sl} tp={tp} (logged only, no Alpaca order)")
+            return {
+                "status": "logged",
+                "source": "tradingview",
+                "symbol": symbol,
+                "action": "sell",
+                "reason": "modo estudio: señal registrada, posiciones abiertas permanecen en Alpaca",
+            }, 200
+
         broker_side = action  # solo buy llega aquí
 
         entry = self._as_float(payload.get("price"))
@@ -308,6 +324,102 @@ class TradingViewBridge:
 
     def _register_action(self, symbol: str):
         self.last_action_ts[symbol] = time.time()
+
+    def _get_current_price(self, symbol: str) -> Optional[float]:
+        """Obtiene precio actual de mercado via Alpaca."""
+        try:
+            import requests as _req
+            import os
+            api_key = os.getenv("ALPACA_API_KEY", "")
+            secret  = os.getenv("ALPACA_SECRET_KEY", "")
+            if not api_key or not secret:
+                return None
+            # Convertir BTCUSD -> BTC/USD para el endpoint de datos
+            sym = symbol.replace("USD", "/USD") if not "/" in symbol else symbol
+            url = f"https://data.alpaca.markets/v1beta3/crypto/us/latest/trades?symbols={sym.replace('/', '%2F')}"
+            r = _req.get(url, headers={"APCA-API-KEY-ID": api_key, "APCA-API-SECRET-KEY": secret}, timeout=5)
+            if r.status_code == 200:
+                trades = r.json().get("trades", {})
+                trade_data = trades.get(sym) or trades.get(symbol)
+                if trade_data:
+                    return float(trade_data.get("p", 0))
+        except Exception as e:
+            self.logger.debug(f"_get_current_price error ({symbol}): {e}")
+        return None
+
+    def _evaluate_outcomes(self):
+        """Evalúa operaciones abiertas contra precio de mercado.
+        Marca WIN si precio >= TP (buy) o LOSS si precio <= SL (buy).
+        Escribe en trades_report.csv sin cerrar nada en Alpaca.
+        """
+        if not self.active_positions:
+            return
+
+        # Obtener precios una vez por símbolo único
+        symbols = list({pos["symbol"] for pos in self.active_positions.values()})
+        prices: Dict[str, Optional[float]] = {}
+        for sym in symbols:
+            prices[sym] = self._get_current_price(sym)
+
+        to_resolve = []
+        for symbol, pos in list(self.active_positions.items()):
+            current_price = prices.get(pos["symbol"])
+            if current_price is None:
+                continue
+
+            entry = pos.get("entry")
+            sl    = pos.get("sl")
+            tp    = pos.get("tp")
+            side  = pos.get("side", "BUY")
+
+            if not entry:
+                continue
+
+            outcome = None
+            if side == "BUY":
+                if tp and current_price >= tp:
+                    outcome = "WIN"
+                elif sl and current_price <= sl:
+                    outcome = "LOSS"
+            else:  # SELL (short paper)
+                if tp and current_price <= tp:
+                    outcome = "WIN"
+                elif sl and current_price >= sl:
+                    outcome = "LOSS"
+
+            if outcome:
+                to_resolve.append((symbol, pos, current_price, outcome))
+
+        for symbol, pos, current_price, outcome in to_resolve:
+            self.active_positions.pop(symbol, None)
+            open_ts   = pos.get("open_ts", time.time())
+            duration  = int(time.time() - open_ts)
+            entry     = pos.get("entry", "")
+            qty       = pos.get("qty", "")
+            side      = pos.get("side", "BUY")
+            pnl       = ""
+            if entry and qty:
+                try:
+                    pnl = round((current_price - float(entry)) * float(qty) if side == "BUY"
+                                else (float(entry) - current_price) * float(qty), 4)
+                except Exception:
+                    pass
+
+            with self.trades_report_csv.open("a", encoding="utf-8", newline="") as f:
+                csv.writer(f).writerow([
+                    pos.get("open_time_utc", ""),
+                    datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+                    duration, symbol, pos.get("setup", "TV"), side,
+                    entry, pos.get("sl", ""), pos.get("tp", ""),
+                    qty, "alpaca_paper_sim", current_price, pnl, outcome,
+                    self.risk_usdt, "", "", "", "sim_eval",
+                ])
+
+            if outcome == "LOSS":
+                self._register_loss()
+
+            self._log_text(f"SIM_{outcome}", symbol, pos.get("setup", "TV"),
+                           f"price={current_price} entry={entry} sl={pos.get('sl')} tp={pos.get('tp')} pnl={pnl}")
 
     def _roll_day(self):
         today = datetime.now(timezone.utc).date()
