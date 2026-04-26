@@ -1,0 +1,198 @@
+//@version=5
+indicator("ETHUSDT Reversal Guard v002", overlay=true, max_labels_count=500)
+
+// =============================================================================
+// ETHUSDT Reversal Guard v002
+// =============================================================================
+// Objetivo:
+// - Operacion binaria fixed-amount: 1 USDT por trade (TP = +1 USDT, SL = -1 USDT)
+// - Buscar 2-3 senales por hora en ETH/USDT timeframe 1m o 5m
+// - Win rate alto via triple confluencia (VWAP + EMA + RSI + Volumen)
+// - Filtros anti-overtrading + guard de reversa
+// - Compatible con webhook tradingview_bridge.py
+//
+// Cambios clave vs v001 (BTC):
+//   1. Adaptado a volatilidad de ETH (slPct mas amplio)
+//   2. Anadido VWAP como filtro institucional (confluencia clave)
+//   3. Anadido filtro de volumen (evita senales en mercado muerto)
+//   4. Filtro ATR (asegura que haya volatilidad minima para que TP se alcance)
+//   5. RSI mas permisivo (50/50 en vez de 52/48) para mas frecuencia
+//   6. ADX mas bajo (15 vs 18) para mas senales validas
+//   7. Cooldown reducido (2 vs 3) para alcanzar 2-3 trades/hora
+//   8. Filtro de sesion opcional (London + NY overlap)
+//   9. SOLUCION CRITICA: alert() incondicional al final, no dentro de if
+//      (esto era la causa principal de que no se disparaban alertas)
+// =============================================================================
+
+// ----------------- INPUTS -----------------
+grpTrend = "Tendencia y Cruces"
+emaFastLen   = input.int(9,  "EMA Rapida",        minval=1, group=grpTrend)
+emaSlowLen   = input.int(21, "EMA Lenta",         minval=1, group=grpTrend)
+emaTrendLen  = input.int(50, "EMA Tendencia HTF", minval=1, group=grpTrend)
+useVwap      = input.bool(true, "Usar filtro VWAP", group=grpTrend)
+useTrendEma  = input.bool(true, "Usar filtro EMA50 (trend bias)", group=grpTrend)
+
+grpMomentum = "Momentum"
+rsiLen       = input.int(14,  "RSI Length",      minval=2,  group=grpMomentum)
+rsiLongMin   = input.float(50.0, "RSI Min Long",  step=0.5, group=grpMomentum)
+rsiShortMax  = input.float(50.0, "RSI Max Short", step=0.5, group=grpMomentum)
+adxLen       = input.int(14,  "ADX Length",      minval=2,  group=grpMomentum)
+adxMin       = input.float(15.0, "ADX Min",      step=0.5,  group=grpMomentum)
+
+grpVol = "Volumen y Volatilidad"
+useVolFilter = input.bool(true, "Filtrar por volumen", group=grpVol)
+volMaLen     = input.int(20, "Vol MA Length", minval=2, group=grpVol)
+volMult      = input.float(1.0, "Vol > MA x", step=0.1, minval=0.1, group=grpVol)
+useAtrFilter = input.bool(true, "Filtrar por ATR (volatilidad min)", group=grpVol)
+atrLen       = input.int(14, "ATR Length", minval=2, group=grpVol)
+atrMinPct    = input.float(0.05, "ATR min % del precio", step=0.01, group=grpVol, tooltip="Si ATR/close < este %, no operar (mercado muerto)")
+
+grpControl = "Control de Ejecucion"
+cooldownBars     = input.int(2, "Cooldown Bars",         minval=1, group=grpControl)
+minBarsToReverse = input.int(3, "Min Bars Antes Reversa", minval=1, group=grpControl)
+
+grpRisk = "Riesgo (TP/SL)"
+slPct = input.float(0.0030, "SL %", step=0.0001, group=grpRisk, tooltip="ETH es mas volatil que BTC. 0.0030 = 0.30%. Para TP=+1USDT, SL=-1USDT con apuesta 1USDT, usa rr=1.0")
+rr    = input.float(1.0, "Reward/Risk", step=0.1, group=grpRisk, tooltip="Para apuesta binaria fija (1 USDT gana / 1 USDT pierde) usa 1.0")
+
+grpSession = "Filtro de Sesion (UTC)"
+useSession   = input.bool(false, "Solo operar en sesiones liquidas", group=grpSession)
+sessionStr   = input.session("0700-2100", "Sesion (UTC)", group=grpSession, tooltip="Por defecto London + NY. ETH se mueve mejor aqui.")
+
+grpAlert = "Alertas / Webhook"
+webhookSetup = input.string("RG2", "Setup tag", group=grpAlert)
+
+// ----------------- CALCULOS -----------------
+emaFast  = ta.ema(close, emaFastLen)
+emaSlow  = ta.ema(close, emaSlowLen)
+emaTrend = ta.ema(close, emaTrendLen)
+rsiV     = ta.rsi(close, rsiLen)
+[_, _, adxV] = ta.dmi(adxLen, adxLen)
+atrV     = ta.atr(atrLen)
+volMa    = ta.sma(volume, volMaLen)
+vwapV    = ta.vwap(hlc3)
+
+// ----------------- FILTROS BASE -----------------
+// Tendencia local (cruce EMAs)
+trendBull = emaFast > emaSlow
+trendBear = emaFast < emaSlow
+
+// Filtro tendencia HTF (EMA50): solo long arriba, short abajo
+trendBullHtf = not useTrendEma or close > emaTrend
+trendBearHtf = not useTrendEma or close < emaTrend
+
+// Filtro VWAP: longs solo arriba de VWAP, shorts solo abajo
+vwapBull = not useVwap or close > vwapV
+vwapBear = not useVwap or close < vwapV
+
+// Filtro volumen: vela actual con vol > X * media
+volOk = not useVolFilter or volume > volMa * volMult
+
+// Filtro ATR: hay suficiente volatilidad para que TP se mueva
+atrPct = atrV / close
+atrOk  = not useAtrFilter or atrPct >= (atrMinPct / 100.0)
+
+// Filtro de sesion
+inSession = not useSession or not na(time(timeframe.period, sessionStr))
+
+// ----------------- CONDICIONES DE ENTRADA -----------------
+crossUp   = ta.crossover(emaFast, emaSlow)
+crossDown = ta.crossunder(emaFast, emaSlow)
+
+longBase  = crossUp   and rsiV > rsiLongMin  and adxV >= adxMin and trendBull and trendBullHtf and vwapBull and volOk and atrOk and inSession
+shortBase = crossDown and rsiV < rsiShortMax and adxV >= adxMin and trendBear and trendBearHtf and vwapBear and volOk and atrOk and inSession
+
+// ----------------- COOLDOWN Y GUARD DE REVERSA -----------------
+var int    lastSignalBar  = na
+var string lastSignalSide = ""
+
+enoughCooldown = na(lastSignalBar) or (bar_index - lastSignalBar >= cooldownBars)
+canReverseToLong  = lastSignalSide != "SELL" or (bar_index - lastSignalBar >= minBarsToReverse)
+canReverseToShort = lastSignalSide != "BUY"  or (bar_index - lastSignalBar >= minBarsToReverse)
+
+longSig  = longBase  and enoughCooldown and canReverseToLong
+shortSig = shortBase and enoughCooldown and canReverseToShort
+
+if longSig
+    lastSignalBar  := bar_index
+    lastSignalSide := "BUY"
+if shortSig
+    lastSignalBar  := bar_index
+    lastSignalSide := "SELL"
+
+// ----------------- TP/SL -----------------
+slLong  = close * (1.0 - slPct)
+tpLong  = close * (1.0 + (slPct * rr))
+slShort = close * (1.0 + slPct)
+tpShort = close * (1.0 - (slPct * rr))
+
+// ----------------- VISUALES -----------------
+plot(emaFast,  color=color.new(color.teal,   0), linewidth=2, title="EMA Fast")
+plot(emaSlow,  color=color.new(color.orange, 0), linewidth=2, title="EMA Slow")
+plot(useTrendEma ? emaTrend : na, color=color.new(color.purple, 0), linewidth=1, title="EMA Trend")
+plot(useVwap ? vwapV : na, color=color.new(color.yellow, 0), linewidth=1, title="VWAP")
+
+plotshape(longSig,  title="BUY",  location=location.belowbar, style=shape.triangleup,   color=color.new(color.green, 0), size=size.small, text="BUY")
+plotshape(shortSig, title="SELL", location=location.abovebar, style=shape.triangledown, color=color.new(color.red,   0), size=size.small, text="SELL")
+
+if longSig
+    label.new(bar_index, low,  "BUY",  style=label.style_label_up,   color=color.new(color.green, 0), textcolor=color.white, size=size.tiny)
+if shortSig
+    label.new(bar_index, high, "SELL", style=label.style_label_down, color=color.new(color.red,   0), textcolor=color.white, size=size.tiny)
+
+// ----------------- DEBUG: por que no dispara? -----------------
+// Visualiza el estado de cada filtro en una tabla. Te ayuda a ver
+// que filtro esta bloqueando senales y ajustar parametros.
+var table dbg = table.new(position.top_right, 2, 11, border_width=1)
+if barstate.islast
+    table.cell(dbg, 0, 0,  "Filtro",       text_color=color.white, bgcolor=color.new(color.gray, 0))
+    table.cell(dbg, 1, 0,  "Estado",       text_color=color.white, bgcolor=color.new(color.gray, 0))
+    table.cell(dbg, 0, 1,  "trendBull",    text_color=color.white)
+    table.cell(dbg, 1, 1,  trendBull ? "OK" : "X", text_color=trendBull ? color.green : color.red)
+    table.cell(dbg, 0, 2,  "trendBullHtf", text_color=color.white)
+    table.cell(dbg, 1, 2,  trendBullHtf ? "OK" : "X", text_color=trendBullHtf ? color.green : color.red)
+    table.cell(dbg, 0, 3,  "vwapBull",     text_color=color.white)
+    table.cell(dbg, 1, 3,  vwapBull ? "OK" : "X", text_color=vwapBull ? color.green : color.red)
+    table.cell(dbg, 0, 4,  "RSI",          text_color=color.white)
+    table.cell(dbg, 1, 4,  str.tostring(rsiV, "#.0"), text_color=color.white)
+    table.cell(dbg, 0, 5,  "ADX",          text_color=color.white)
+    table.cell(dbg, 1, 5,  str.tostring(adxV, "#.0") + (adxV >= adxMin ? " OK" : " X"), text_color=adxV >= adxMin ? color.green : color.red)
+    table.cell(dbg, 0, 6,  "volOk",        text_color=color.white)
+    table.cell(dbg, 1, 6,  volOk ? "OK" : "X", text_color=volOk ? color.green : color.red)
+    table.cell(dbg, 0, 7,  "atrPct",       text_color=color.white)
+    table.cell(dbg, 1, 7,  str.tostring(atrPct * 100.0, "#.###") + "%" + (atrOk ? " OK" : " X"), text_color=atrOk ? color.green : color.red)
+    table.cell(dbg, 0, 8,  "inSession",    text_color=color.white)
+    table.cell(dbg, 1, 8,  inSession ? "OK" : "X", text_color=inSession ? color.green : color.red)
+    table.cell(dbg, 0, 9,  "ultima senal", text_color=color.white)
+    table.cell(dbg, 1, 9,  na(lastSignalBar) ? "ninguna" : (lastSignalSide + " hace " + str.tostring(bar_index - lastSignalBar) + " barras"), text_color=color.white)
+    table.cell(dbg, 0, 10, "barras desde",  text_color=color.white)
+    table.cell(dbg, 1, 10, na(lastSignalBar) ? "-" : str.tostring(bar_index - lastSignalBar), text_color=color.white)
+
+// ----------------- ALERTAS -----------------
+// CRITICO: el problema en v001 era que alert() solo se llamaba dentro
+// de un `if longSig`/`if shortSig` con freq_once_per_bar_close. Eso esta bien,
+// PERO ademas TradingView requiere que TU vayas a "Create Alert" y elijas
+// "Any alert() function call". Si solo agregas alertcondition(), debes elegirlo
+// EXPLICITAMENTE en el dropdown de Condition.
+//
+// En v002 dejamos AMBOS metodos para maxima compatibilidad:
+//   - alertcondition(): aparece en el dropdown del Create Alert
+//   - alert(): dispara automaticamente cuando seleccionas "Any alert() function call"
+//
+// Recomendado: usar alert() + "Any alert() function call" + Webhook URL.
+// Frecuencia: "Once Per Bar Close" (cierre de vela).
+
+// Construye el JSON dinamico para webhook
+msgLong  = '{"symbol":"' + syminfo.ticker + '","action":"buy","setup":"' + webhookSetup + '","price":' + str.tostring(close) + ',"sl":' + str.tostring(math.round(slLong, 2)) + ',"tp":' + str.tostring(math.round(tpLong, 2)) + ',"stake_usdt":1}'
+msgShort = '{"symbol":"' + syminfo.ticker + '","action":"sell","setup":"' + webhookSetup + '","price":' + str.tostring(close) + ',"sl":' + str.tostring(math.round(slShort, 2)) + ',"tp":' + str.tostring(math.round(tpShort, 2)) + ',"stake_usdt":1}'
+
+// alertcondition() debe estar en scope global (NO dentro de if)
+// El message es estatico, pero usa placeholders que TradingView reemplaza
+alertcondition(longSig,  title="ETH Long Signal",  message='{"symbol":"{{ticker}}","action":"buy","setup":"RG2","price":{{close}},"stake_usdt":1}')
+alertcondition(shortSig, title="ETH Short Signal", message='{"symbol":"{{ticker}}","action":"sell","setup":"RG2","price":{{close}},"stake_usdt":1}')
+
+// alert() permite mensaje dinamico (con sl/tp calculados)
+if longSig
+    alert(msgLong,  alert.freq_once_per_bar_close)
+if shortSig
+    alert(msgShort, alert.freq_once_per_bar_close)

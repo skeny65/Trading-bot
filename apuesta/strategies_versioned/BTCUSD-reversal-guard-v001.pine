@@ -1,0 +1,74 @@
+//@version=5
+indicator("BTCUSD Reversal Guard v001", overlay=true, max_labels_count=500)
+
+// Objetivo:
+// Reducir sobreoperacion y evitar reversas BUY/SELL en barras consecutivas.
+// Diseñada para BTCUSD en 1m-5m.
+
+emaFastLen = input.int(9, "EMA Fast", minval=1)
+emaSlowLen = input.int(21, "EMA Slow", minval=1)
+rsiLen = input.int(14, "RSI Length", minval=2)
+adxLen = input.int(14, "ADX Length", minval=2)
+adxMin = input.float(18.0, "ADX Min", step=0.1)
+
+cooldownBars = input.int(3, "Cooldown Bars", minval=1)
+minBarsToReverse = input.int(4, "Min Bars Before Reverse", minval=1)
+
+slPct = input.float(0.0015, "SL %", step=0.0001)
+rr = input.float(1.2, "Reward/Risk", step=0.1)
+
+emaFast = ta.ema(close, emaFastLen)
+emaSlow = ta.ema(close, emaSlowLen)
+rsiV = ta.rsi(close, rsiLen)
+[_, _, adxV] = ta.dmi(adxLen, adxLen)
+
+trendBull = emaFast > emaSlow
+trendBear = emaFast < emaSlow
+
+longBase = ta.crossover(emaFast, emaSlow) and rsiV > 52 and adxV >= adxMin and trendBull
+shortBase = ta.crossunder(emaFast, emaSlow) and rsiV < 48 and adxV >= adxMin and trendBear
+
+var int lastSignalBar = na
+var string lastSignalSide = ""
+
+enoughCooldown = na(lastSignalBar) or (bar_index - lastSignalBar >= cooldownBars)
+
+canReverseToLong = lastSignalSide != "SELL" or (bar_index - lastSignalBar >= minBarsToReverse)
+canReverseToShort = lastSignalSide != "BUY" or (bar_index - lastSignalBar >= minBarsToReverse)
+
+longSig = longBase and enoughCooldown and canReverseToLong
+shortSig = shortBase and enoughCooldown and canReverseToShort
+
+if longSig
+    lastSignalBar := bar_index
+    lastSignalSide := "BUY"
+if shortSig
+    lastSignalBar := bar_index
+    lastSignalSide := "SELL"
+
+slLong = close * (1.0 - slPct)
+tpLong = close * (1.0 + (slPct * rr))
+slShort = close * (1.0 + slPct)
+tpShort = close * (1.0 - (slPct * rr))
+
+plot(emaFast, color=color.new(color.teal, 0), linewidth=2, title="EMA Fast")
+plot(emaSlow, color=color.new(color.orange, 0), linewidth=2, title="EMA Slow")
+
+plotshape(longSig, title="BUY", location=location.belowbar, style=shape.triangleup, color=color.new(color.green, 0), size=size.small, text="BUY")
+plotshape(shortSig, title="SELL", location=location.abovebar, style=shape.triangledown, color=color.new(color.red, 0), size=size.small, text="SELL")
+
+if longSig
+    label.new(bar_index, low, "BUY", style=label.style_label_up, color=color.new(color.green, 0), textcolor=color.white, size=size.tiny)
+if shortSig
+    label.new(bar_index, high, "SELL", style=label.style_label_down, color=color.new(color.red, 0), textcolor=color.white, size=size.tiny)
+
+alertcondition(longSig, "Long Signal", message="long")
+alertcondition(shortSig, "Short Signal", message="short")
+
+if longSig
+    msgLong = '{"symbol":"' + syminfo.ticker + '","action":"buy","setup":"RG1","price":' + str.tostring(close) + ',"sl":' + str.tostring(math.round(slLong, 2)) + ',"tp":' + str.tostring(math.round(tpLong, 2)) + '}'
+    alert(msgLong, alert.freq_once_per_bar_close)
+
+if shortSig
+    msgShort = '{"symbol":"' + syminfo.ticker + '","action":"sell","setup":"RG1","price":' + str.tostring(close) + ',"sl":' + str.tostring(math.round(slShort, 2)) + ',"tp":' + str.tostring(math.round(tpShort, 2)) + '}'
+    alert(msgShort, alert.freq_once_per_bar_close)

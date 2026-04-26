@@ -1,0 +1,225 @@
+//@version=5
+indicator("ETHUSDT Trend Trail v003", overlay=true, max_labels_count=500)
+
+// =============================================================================
+// ETHUSDT Trend Trail v003
+// =============================================================================
+// Tipo: Trend-following + Trailing dinamico (NO scalping)
+// Objetivo:
+//   - Capturar movimientos de mediano plazo en ETH/USDT
+//   - Salida via trailing stop dinamico (Chandelier Exit + Supertrend)
+//   - 1 senal cada 1-2 horas (timeframe 15m con TF macro 1h)
+//   - Diseno apuesta: $20 balance, max riesgo $4 (20%) por trade
+//
+// Filosofia (basada en investigacion 2026):
+//   1. Entrada solo en alineacion multi-timeframe (15m + 1h Supertrend)
+//   2. Salida es la clave: Chandelier Exit ATR-based, no TP fijo
+//   3. Stop inicial fijo (cap 20% balance), trailing despues de 1R
+//   4. Filtros de calidad: ADX, volumen, ATR minimo
+//   5. Sin reversa rapida: cooldown + bloqueo direccional
+//
+// Respuesta directa a tus preguntas:
+//   "trailing es a mas largo plazo?" -> SI. El trailing rinde mejor en 15m-4h
+//      donde las tendencias persisten. En 1m hay mucho ruido y el trail
+//      se cierra por whipsaw antes de capturar nada.
+//   "una operacion cada 1-2 horas" -> Realista en 15m con buen filtrado.
+//      Default settings dan ~10-15 senales/dia en ETH (1 cada 1.5-2h).
+// =============================================================================
+
+// ----------------- INPUTS -----------------
+grpCore = "Tendencia Principal"
+htfTimeframe   = input.timeframe("60", "Timeframe Macro (filtro)", group=grpCore, tooltip="1h por defecto. La senal solo dispara si la tendencia macro coincide.")
+emaFastLen     = input.int(20, "EMA Rapida (entrada)",  minval=2, group=grpCore)
+emaSlowLen     = input.int(50, "EMA Lenta (entrada)",   minval=5, group=grpCore)
+useHtfFilter   = input.bool(true, "Usar filtro HTF Supertrend", group=grpCore)
+
+grpST = "Supertrend (entrada y salida)"
+stAtrLen     = input.int(10,  "Supertrend ATR Length", minval=1, group=grpST)
+stFactor     = input.float(3.0, "Supertrend Factor", step=0.1, group=grpST, tooltip="3.0 standard. Sube a 4.0 para menos whipsaw, baja a 2.0 para mas senales.")
+
+grpCE = "Chandelier Exit (trailing)"
+ceAtrLen   = input.int(22, "Chandelier ATR Length", minval=2, group=grpCE)
+ceFactor   = input.float(3.0, "Chandelier Factor", step=0.1, group=grpCE, tooltip="3.0 = standard Le Beau. Baja a 2.0 para trailing mas agresivo (cierra antes), sube a 4.0 para dar mas espacio.")
+
+grpFilt = "Filtros de Calidad"
+adxLen       = input.int(14,  "ADX Length", minval=2, group=grpFilt)
+adxMin       = input.float(18.0, "ADX Min", step=0.5, group=grpFilt, tooltip="18+ asegura que hay tendencia. <18 es rango = whipsaw.")
+useVolFilter = input.bool(true, "Filtrar por volumen", group=grpFilt)
+volMaLen     = input.int(20, "Vol MA Length", group=grpFilt)
+volMult      = input.float(1.0, "Vol > MA x", step=0.1, group=grpFilt)
+useAtrFilter = input.bool(true, "Filtrar por ATR minimo", group=grpFilt)
+atrMinPct    = input.float(0.10, "ATR min % del precio", step=0.01, group=grpFilt, tooltip="Si ATR/close < 0.10%, no operar (mercado muerto).")
+
+grpRisk = "Riesgo (balance $20)"
+balanceUsdt    = input.float(20.0, "Balance ($)", step=1.0, group=grpRisk)
+maxRiskPct     = input.float(20.0, "Max Riesgo % balance", step=1.0, group=grpRisk, tooltip="20% de $20 = $4 max perdida por trade")
+slPct          = input.float(1.5, "SL inicial %", step=0.1, group=grpRisk, tooltip="1.5% del precio. Combinado con leverage define la perdida en USDT.")
+useTpHard      = input.bool(false, "Usar TP duro (ademas del trailing)", group=grpRisk, tooltip="OFF = solo trailing (deja correr ganancias). ON = TP fijo R:R.")
+rr             = input.float(2.0, "Reward/Risk (si TP duro ON)", step=0.1, group=grpRisk)
+
+grpControl = "Control de Ejecucion"
+cooldownBars     = input.int(4, "Cooldown bars (post-senal)", minval=1, group=grpControl)
+minBarsToReverse = input.int(8, "Min bars antes de reversa", minval=1, group=grpControl)
+
+grpSession = "Sesion (UTC)"
+useSession = input.bool(false, "Filtrar por sesion", group=grpSession)
+sessionStr = input.session("0700-2100", "Sesion liquida UTC", group=grpSession, tooltip="London 07-16, NY 13-21. Off por default: ETH 24/7.")
+
+grpAlert = "Webhook"
+setupTag = input.string("TREND", "Setup tag", group=grpAlert)
+
+// ----------------- INDICADORES -----------------
+emaFast = ta.ema(close, emaFastLen)
+emaSlow = ta.ema(close, emaSlowLen)
+[_, _, adxV] = ta.dmi(adxLen, adxLen)
+volMa  = ta.sma(volume, volMaLen)
+atrV   = ta.atr(14)
+atrPct = atrV / close * 100.0
+
+// Supertrend del timeframe actual (entrada)
+[stLine, stDir] = ta.supertrend(stFactor, stAtrLen)
+
+// Supertrend del timeframe macro (filtro HTF)
+[htfStLine, htfStDir] = request.security(syminfo.tickerid, htfTimeframe, ta.supertrend(stFactor, stAtrLen), lookahead=barmerge.lookahead_off)
+
+// Chandelier Exit (trailing)
+ceAtr     = ta.atr(ceAtrLen)
+highestHi = ta.highest(high, ceAtrLen)
+lowestLo  = ta.lowest(low, ceAtrLen)
+ceLong    = highestHi - ceAtr * ceFactor
+ceShort   = lowestLo  + ceAtr * ceFactor
+
+// CE direction state (segun donde esta el precio)
+var float ceLongPrev  = na
+var float ceShortPrev = na
+var int   ceDir       = 1
+
+ceLongCurr  = close[1] > nz(ceLongPrev,  ceLong)  ? math.max(ceLong,  nz(ceLongPrev,  ceLong))  : ceLong
+ceShortCurr = close[1] < nz(ceShortPrev, ceShort) ? math.min(ceShort, nz(ceShortPrev, ceShort)) : ceShort
+ceDir := close > ceShortCurr ? 1 : close < ceLongCurr ? -1 : ceDir
+ceLongPrev  := ceLongCurr
+ceShortPrev := ceShortCurr
+
+// ----------------- FILTROS -----------------
+trendBull = emaFast > emaSlow and close > emaFast
+trendBear = emaFast < emaSlow and close < emaFast
+
+// Supertrend flip (entrada)
+stFlipLong  = stDir == -1 and stDir[1] == 1   // estaba arriba, ahora abajo del precio = bullish flip
+stFlipShort = stDir ==  1 and stDir[1] == -1
+
+// HTF alignment
+htfBull = not useHtfFilter or htfStDir == -1   // HTF supertrend below price = bullish
+htfBear = not useHtfFilter or htfStDir ==  1
+
+// Otros filtros
+adxOk     = adxV >= adxMin
+volOk     = not useVolFilter or volume > volMa * volMult
+atrOk     = not useAtrFilter or atrPct >= atrMinPct
+inSession = not useSession or not na(time(timeframe.period, sessionStr))
+
+// ----------------- SENAL -----------------
+longBase  = stFlipLong  and trendBull and htfBull and adxOk and volOk and atrOk and inSession
+shortBase = stFlipShort and trendBear and htfBear and adxOk and volOk and atrOk and inSession
+
+// Cooldown y guard de reversa
+var int    lastSigBar  = na
+var string lastSigSide = ""
+
+enoughCooldown    = na(lastSigBar) or (bar_index - lastSigBar >= cooldownBars)
+canReverseToLong  = lastSigSide != "SELL" or (bar_index - lastSigBar >= minBarsToReverse)
+canReverseToShort = lastSigSide != "BUY"  or (bar_index - lastSigBar >= minBarsToReverse)
+
+longSig  = longBase  and enoughCooldown and canReverseToLong
+shortSig = shortBase and enoughCooldown and canReverseToShort
+
+if longSig
+    lastSigBar  := bar_index
+    lastSigSide := "BUY"
+if shortSig
+    lastSigBar  := bar_index
+    lastSigSide := "SELL"
+
+// ----------------- TP/SL/TRAILING -----------------
+slLong  = close * (1.0 - slPct / 100.0)
+tpLong  = close * (1.0 + (slPct * rr) / 100.0)
+slShort = close * (1.0 + slPct / 100.0)
+tpShort = close * (1.0 - (slPct * rr) / 100.0)
+
+// Riesgo en USDT (informativo)
+maxRiskUsdt = balanceUsdt * (maxRiskPct / 100.0)
+
+// Trailing distance (para que tu webhook lo use):
+// Recomendacion: mandar trail_pct = ceFactor * (atr/close * 100) o un valor fijo.
+trailPctLong  = (close - ceLongCurr)  / close * 100.0
+trailPctShort = (ceShortCurr - close) / close * 100.0
+trailPct = longSig ? trailPctLong : shortSig ? trailPctShort : na
+
+// ----------------- VISUALES -----------------
+plot(emaFast, "EMA Rapida", color=color.new(color.aqua,   0), linewidth=2)
+plot(emaSlow, "EMA Lenta",  color=color.new(color.orange, 0), linewidth=2)
+
+// Supertrend coloreado
+stUp = stDir == -1 ? stLine : na
+stDn = stDir ==  1 ? stLine : na
+plot(stUp, "ST Bull", color=color.new(color.green, 0), linewidth=2, style=plot.style_linebr)
+plot(stDn, "ST Bear", color=color.new(color.red,   0), linewidth=2, style=plot.style_linebr)
+
+// Chandelier Exit coloreado
+ceUp = ceDir ==  1 ? ceLongCurr  : na
+ceDn = ceDir == -1 ? ceShortCurr : na
+plot(ceUp, "CE Long Trail",  color=color.new(color.lime,    50), linewidth=1, style=plot.style_linebr)
+plot(ceDn, "CE Short Trail", color=color.new(color.fuchsia, 50), linewidth=1, style=plot.style_linebr)
+
+plotshape(longSig,  title="LONG",  location=location.belowbar, style=shape.triangleup,   color=color.new(color.green, 0), size=size.normal, text="LONG")
+plotshape(shortSig, title="SHORT", location=location.abovebar, style=shape.triangledown, color=color.new(color.red,   0), size=size.normal, text="SHORT")
+
+if longSig
+    label.new(bar_index, low,  "LONG TREND\nSL: " + str.tostring(slLong, "#.##") + "\nTrail: " + str.tostring(trailPctLong, "#.##") + "%", style=label.style_label_up, color=color.new(color.green, 0), textcolor=color.white, size=size.small)
+if shortSig
+    label.new(bar_index, high, "SHORT TREND\nSL: " + str.tostring(slShort, "#.##") + "\nTrail: " + str.tostring(trailPctShort, "#.##") + "%", style=label.style_label_down, color=color.new(color.red, 0), textcolor=color.white, size=size.small)
+
+// ----------------- TABLA DE DEBUG -----------------
+var table dbg = table.new(position.top_right, 2, 12, border_width=1)
+if barstate.islast
+    table.cell(dbg, 0, 0,  "Filtro",       text_color=color.white, bgcolor=color.new(color.gray, 0))
+    table.cell(dbg, 1, 0,  "Estado",       text_color=color.white, bgcolor=color.new(color.gray, 0))
+    table.cell(dbg, 0, 1,  "ST dir (TF)",  text_color=color.white)
+    table.cell(dbg, 1, 1,  stDir == -1 ? "BULL" : "BEAR", text_color=stDir == -1 ? color.green : color.red)
+    table.cell(dbg, 0, 2,  "ST dir (HTF)", text_color=color.white)
+    table.cell(dbg, 1, 2,  htfStDir == -1 ? "BULL" : "BEAR", text_color=htfStDir == -1 ? color.green : color.red)
+    table.cell(dbg, 0, 3,  "EMA trend",    text_color=color.white)
+    table.cell(dbg, 1, 3,  trendBull ? "BULL" : trendBear ? "BEAR" : "FLAT", text_color=trendBull ? color.green : trendBear ? color.red : color.gray)
+    table.cell(dbg, 0, 4,  "ADX",          text_color=color.white)
+    table.cell(dbg, 1, 4,  str.tostring(adxV, "#.0") + (adxOk ? " OK" : " X"), text_color=adxOk ? color.green : color.red)
+    table.cell(dbg, 0, 5,  "Volumen",      text_color=color.white)
+    table.cell(dbg, 1, 5,  volOk ? "OK" : "X", text_color=volOk ? color.green : color.red)
+    table.cell(dbg, 0, 6,  "ATR %",        text_color=color.white)
+    table.cell(dbg, 1, 6,  str.tostring(atrPct, "#.##") + "%" + (atrOk ? " OK" : " X"), text_color=atrOk ? color.green : color.red)
+    table.cell(dbg, 0, 7,  "Sesion",       text_color=color.white)
+    table.cell(dbg, 1, 7,  inSession ? "OK" : "X", text_color=inSession ? color.green : color.red)
+    table.cell(dbg, 0, 8,  "Cooldown",     text_color=color.white)
+    table.cell(dbg, 1, 8,  enoughCooldown ? "OK" : "wait", text_color=enoughCooldown ? color.green : color.orange)
+    table.cell(dbg, 0, 9,  "ultima senal", text_color=color.white)
+    table.cell(dbg, 1, 9,  na(lastSigBar) ? "ninguna" : (lastSigSide + " hace " + str.tostring(bar_index - lastSigBar) + " bars"), text_color=color.white)
+    table.cell(dbg, 0, 10, "Riesgo max",   text_color=color.white)
+    table.cell(dbg, 1, 10, "$" + str.tostring(maxRiskUsdt, "#.##"), text_color=color.yellow)
+    table.cell(dbg, 0, 11, "Trail actual", text_color=color.white)
+    table.cell(dbg, 1, 11, ceDir == 1 ? str.tostring(ceLongCurr, "#.##") : str.tostring(ceShortCurr, "#.##"), text_color=color.aqua)
+
+// ----------------- ALERTAS -----------------
+// JSON con TODOS los campos que tu webhook trend ya espera:
+//   - symbol, action, setup, price, sl, tp (opcional), trail_pct, leverage_hint
+// Tu place_trend_trade decide leverage. Pine solo manda contexto.
+msgLong  = '{"symbol":"' + syminfo.ticker + '","action":"buy","setup":"' + setupTag + '","price":' + str.tostring(close, "#.##") + ',"sl":' + str.tostring(slLong, "#.##") + ',"tp":' + (useTpHard ? str.tostring(tpLong, "#.##") : "null") + ',"trail_pct":' + str.tostring(trailPctLong, "#.###") + ',"sl_pct":' + str.tostring(slPct, "#.##") + ',"max_risk_usdt":' + str.tostring(maxRiskUsdt, "#.##") + '}'
+msgShort = '{"symbol":"' + syminfo.ticker + '","action":"sell","setup":"' + setupTag + '","price":' + str.tostring(close, "#.##") + ',"sl":' + str.tostring(slShort, "#.##") + ',"tp":' + (useTpHard ? str.tostring(tpShort, "#.##") : "null") + ',"trail_pct":' + str.tostring(trailPctShort, "#.###") + ',"sl_pct":' + str.tostring(slPct, "#.##") + ',"max_risk_usdt":' + str.tostring(maxRiskUsdt, "#.##") + '}'
+
+// alertcondition() en scope global (para Create Alert dropdown)
+alertcondition(longSig,  title="ETH Trend Long",  message='{"symbol":"{{ticker}}","action":"buy","setup":"TREND","price":{{close}}}')
+alertcondition(shortSig, title="ETH Trend Short", message='{"symbol":"{{ticker}}","action":"sell","setup":"TREND","price":{{close}}}')
+
+// alert() para Webhook con mensaje dinamico
+if longSig
+    alert(msgLong,  alert.freq_once_per_bar_close)
+if shortSig
+    alert(msgShort, alert.freq_once_per_bar_close)

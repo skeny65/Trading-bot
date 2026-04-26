@@ -519,6 +519,18 @@ class TradingViewBridge:
 
     def _strategy_id_for_setup(self, setup: str) -> str:
         normalized = "".join(ch if ch.isalnum() else "_" for ch in setup.lower()).strip("_")
+
+        # Mapeo explicito de setups activos para trazabilidad estable en logs/reportes.
+        setup_map = {
+            "rg2": "apuesta_eth_reversal_guard_v002",
+            "trend": "apuesta_eth_trend_trail_v003",
+            # Legacy / fallback
+            "rg1": "apuesta_btc_reversal_guard_v001_legacy",
+        }
+
+        if normalized in setup_map:
+            return setup_map[normalized]
+
         return f"apuesta_{normalized}" if normalized else "apuesta_tv"
 
     def _register_paper_signal(self, payload, symbol, action, setup, executed: bool, skip_reason: str):
