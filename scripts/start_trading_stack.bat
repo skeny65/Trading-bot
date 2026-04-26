@@ -9,13 +9,11 @@ rem 1) TradingView app (optional, via tradingview-mcp launcher)
 rem 2) Uvicorn bot server
 rem 3) ngrok public tunnel
 rem 4) Claude JSON signal sender
-rem 5) Claude CLI window (optional)
 
 set "ROOT=%~dp0.."
 pushd "%ROOT%"
 
 set "TV_MCP_LAUNCHER=C:\Users\kenyb\Desktop\OTROS\tradingview-mcp\launch_msix.ps1"
-set "CLAUDE_CMD=C:\Users\kenyb\AppData\Roaming\npm\claude.cmd"
 
 echo.
 echo  ============================================
@@ -27,7 +25,6 @@ echo    [*] TradingView app
 echo    [*] Bot FastAPI/Uvicorn
 echo    [*] ngrok tunnel
 echo    [*] Signal Sender (Plan B)
-echo    [*] Claude CLI
 echo.
 
 if not exist "venv\Scripts\activate.bat" (
@@ -73,18 +70,11 @@ start "Trading Bot (Uvicorn)" cmd /k "cd /d ""%ROOT%"" && call venv\Scripts\acti
 start "ngrok Tunnel" cmd /k "cd /d ""%ROOT%"" && ngrok http --domain=%NGROK_DOMAIN% 8000"
 start "Signal Sender (Paste Claude JSON)" cmd /k "cd /d ""%ROOT%\scripts"" && powershell -NoProfile -ExecutionPolicy Bypass -File .\send_claude_signal.ps1"
 
-if exist "%CLAUDE_CMD%" (
-  start "Claude CLI" cmd /k "cd /d ""%USERPROFILE%"" && call ""%CLAUDE_CMD%"""
-) else (
-  echo [WARN] Claude CLI not found: %CLAUDE_CMD%
-)
-
 echo [OK] Unified stack windows launched:
 echo      - TradingView App ^(if launcher exists^)
 echo      - Trading Bot ^(Uvicorn^)
 echo      - ngrok Tunnel
 echo      - Signal Sender ^(paste JSON from Claude + END^)
-echo      - Claude CLI ^(if installed^)
 echo.
 echo Keep bot and ngrok windows open while Claude Routine is running.
 
