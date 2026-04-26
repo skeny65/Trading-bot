@@ -14,7 +14,7 @@ rem 5) Claude CLI window (optional)
 set "ROOT=%~dp0.."
 pushd "%ROOT%"
 
-set "TV_MCP_LAUNCHER=C:\Users\kenyb\Desktop\tradingview-mcp\launch_msix.ps1"
+set "TV_MCP_LAUNCHER=C:\Users\kenyb\Desktop\OTROS\tradingview-mcp\launch_msix.ps1"
 set "CLAUDE_CMD=C:\Users\kenyb\AppData\Roaming\npm\claude.cmd"
 
 echo.
