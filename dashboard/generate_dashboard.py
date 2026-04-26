@@ -458,6 +458,8 @@ class DashboardGenerator:
                         "side": row.get("side", ""),
                         "qty": row.get("qty", ""),
                         "entry": row.get("entry", ""),
+                        "sl": row.get("sl", ""),
+                        "tp": row.get("tp", ""),
                         "close_price": row.get("close_price", ""),
                         "pnl": row.get("pnl_usdt", ""),
                         "outcome": (row.get("outcome") or "").upper() or "OPEN",
@@ -494,6 +496,8 @@ class DashboardGenerator:
                         "side": side,
                         "qty": qty,
                         "entry": rec.get("filled_avg_price", ""),
+                        "sl": "",
+                        "tp": "",
                         "close_price": "",
                         "pnl": rec.get("pnl", ""),
                         "outcome": out,
@@ -533,6 +537,8 @@ class DashboardGenerator:
                 f"<td>{html.escape(str(o.get('side', '')))}</td>"
                 f"<td>{html.escape(str(o.get('qty', '')))}</td>"
                 f"<td>{html.escape(str(o.get('entry', '')))}</td>"
+                f"<td>{html.escape(str(o.get('sl', '')))}</td>"
+                f"<td>{html.escape(str(o.get('tp', '')))}</td>"
                 f"<td>{html.escape(str(o.get('close_price', '')))}</td>"
                 f"<td>{html.escape(str(o.get('pnl', '')))}</td>"
                 f"<td><span class=\"status-badge {cls}\">{html.escape(outcome)}</span></td>"
@@ -547,6 +553,49 @@ class DashboardGenerator:
             "ops_open": str(open_ops),
         }
     
+    def _build_signals_section(self) -> Dict:
+        """Lee paper_signals.csv y construye la tabla de todas las alertas TradingView."""
+        sig_path = "data/apuesta/paper_signals.csv"
+        rows = []
+        total = executed = logged = 0
+        if os.path.exists(sig_path):
+            with open(sig_path, "r", encoding="utf-8", newline="") as f:
+                all_rows = list(csv.DictReader(f))
+            # mostrar las últimas 60, de más nueva a más antigua
+            for row in reversed(all_rows[-60:]):
+                total += 1
+                is_exec = str(row.get("was_executed", "")).upper() == "Y"
+                if is_exec:
+                    executed += 1
+                else:
+                    logged += 1
+                side = str(row.get("side", "")).upper()
+                side_color = "#00ff88" if side == "BUY" else "#ff4757" if side == "SELL" else "#e0e0e0"
+                badge_exec = (
+                    '<span class="status-badge status-active">SÍ</span>' if is_exec
+                    else '<span class="status-badge status-hold">LOG</span>'
+                )
+                rows.append(
+                    "<tr>"
+                    f"<td>{html.escape(str(row.get('ts_utc', '')))}</td>"
+                    f"<td><strong>{html.escape(str(row.get('symbol', '')))}</strong></td>"
+                    f"<td>{html.escape(str(row.get('setup', '')))}</td>"
+                    f"<td style='color:{side_color};font-weight:bold;'>{html.escape(side)}</td>"
+                    f"<td>{html.escape(str(row.get('entry', '')))}</td>"
+                    f"<td>{html.escape(str(row.get('sl', '')))}</td>"
+                    f"<td>{html.escape(str(row.get('tp', '')))}</td>"
+                    f"<td>{badge_exec}</td>"
+                    f"<td style='font-size:0.8em;color:#888;'>{html.escape(str(row.get('skip_reason', '')))}</td>"
+                    "</tr>"
+                )
+        empty = "<tr><td colspan='9' style='color:#888'>Sin señales aún</td></tr>"
+        return {
+            "signals_rows": "\n".join(rows) if rows else empty,
+            "sig_total": str(total),
+            "sig_executed": str(executed),
+            "sig_logged": str(logged),
+        }
+
     def _build_decision_rows(self, data: Dict) -> str:
         rows = []
         for d in data["decisions"]:
@@ -564,6 +613,7 @@ class DashboardGenerator:
         self._append_snapshot(data)
         history_summary = self._compute_history_summary()
         operations_summary = self._build_operations_section()
+        signals_summary = self._build_signals_section()
         template = self._load_template()
         wr_val, dd_val = data["win_rate_avg"], data["max_drawdown"]
         status_badge = (
@@ -590,6 +640,10 @@ class DashboardGenerator:
             "{{ops_win}}": operations_summary["ops_win"],
             "{{ops_loss}}": operations_summary["ops_loss"],
             "{{ops_open}}": operations_summary["ops_open"],
+            "{{signals_rows}}": signals_summary["signals_rows"],
+            "{{sig_total}}": signals_summary["sig_total"],
+            "{{sig_executed}}": signals_summary["sig_executed"],
+            "{{sig_logged}}": signals_summary["sig_logged"],
         }
         html = template
         for placeholder, value in replacements.items(): html = html.replace(placeholder, value)

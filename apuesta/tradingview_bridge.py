@@ -189,23 +189,9 @@ class TradingViewBridge:
     async def _handle_entry(self, payload: Dict, symbol: str, action: str, setup: str) -> Tuple[Dict, int]:
         strategy_id = self._strategy_id_for_setup(setup)
 
-        # MODO ESTUDIO: sell solo registra en paper_signals para analizar la estrategia.
-        # No cierra ni abre nada en Alpaca. El usuario cierra manualmente.
-        if action == "sell":
-            entry = self._as_float(payload.get("price"))
-            sl = self._as_float(payload.get("sl"))
-            tp = self._as_float(payload.get("tp"))
-            self._register_paper_signal(payload, symbol, action, setup, executed=False, skip_reason="study_mode_sell_logged")
-            self._log_text("SELL_SIGNAL", symbol, setup, f"entry={entry} sl={sl} tp={tp} (logged only, no Alpaca order)")
-            return {
-                "status": "logged",
-                "source": "tradingview",
-                "symbol": symbol,
-                "action": "sell",
-                "reason": "modo estudio: señal registrada, posiciones abiertas permanecen en Alpaca",
-            }, 200
-
-        broker_side = action  # solo buy llega aquí
+        # buy y sell se tratan igual: abren posición en Alpaca y se loguean en todos los CSVs.
+        # La cuenta de prueba es solo para registrar; las posiciones quedan abiertas.
+        broker_side = action  # "buy" o "sell"
 
         entry = self._as_float(payload.get("price"))
         sl = self._as_float(payload.get("sl"))
