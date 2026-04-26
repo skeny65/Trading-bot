@@ -1,0 +1,3 @@
+Este archivo permite que Git rastree el directorio logs/
+Los archivos .log se generan automaticamente en runtime
+Formato: TIMESTAMP | LEVEL | MODULE | MESSAGE | CONTEXT

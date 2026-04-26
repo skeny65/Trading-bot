@@ -5,6 +5,7 @@ import aiohttp
 from datetime import datetime
 from typing import Dict, Optional, List
 
+from utils.logger import setup_logger
 
 class TelegramNotifier:
     """
@@ -25,6 +26,7 @@ class TelegramNotifier:
         self.notify_drawdown = os.getenv("NOTIFY_ON_CRITICAL_DRAWDOWN", "true").lower() == "true"
         
         self.base_url = f"https://api.telegram.org/bot{self.token}" if self.token else None
+        self.logger = setup_logger("telegram", "logs/telegram.log")
     
     async def _send_message(self, text: str, parse_mode: str = "html") -> bool:
         """
@@ -45,13 +47,15 @@ class TelegramNotifier:
             async with aiohttp.ClientSession() as session:
                 async with session.post(url, json=payload, timeout=10) as response:
                     result = await response.json()
+                    summary = text.replace('\n', ' ')[:50] + "..."
                     if result.get("ok"):
+                        self.logger.info(f"{self.chat_id} | INFO | SENT | {summary} | {json.dumps(result)}")
                         return True
                     else:
-                        print(f"error telegram: {result.get('description')}")
+                        self.logger.error(f"{self.chat_id} | ERROR | FAILED | {summary} | {json.dumps(result)}")
                         return False
         except Exception as e:
-            print(f"fallo envío a telegram: {e}")
+            self.logger.critical(f"{self.chat_id} | ERROR | EXCEPTION | {str(e)}")
             return False
     
     def _format_metrics(self, metrics: Dict) -> str:
