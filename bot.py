@@ -59,13 +59,30 @@ class GitHubSignalPoller:
                 # Ejecutar lectura síncrona en un hilo separado
                 loop = asyncio.get_event_loop()
                 signal_data = await loop.run_in_executor(None, self._read_signal)
-                
-                if signal_data and signal_data.get("status") == "pending" and not signal_data.get("processed"):
-                    if signal_data.get("timestamp") != self.last_processed:
-                        logger.info(f"Nueva señal detectada en GitHub: {signal_data['signal']['strategy_id']}")
+
+                if signal_data:
+                    event_id = signal_data.get("timestamp") or json.dumps(signal_data, sort_keys=True)
+                    if event_id == self.last_processed:
+                        await asyncio.sleep(60)
+                        continue
+
+                    status = str(signal_data.get("status", "")).lower()
+                    if status == "pending" and not signal_data.get("processed"):
+                        strategy_id = (signal_data.get("signal") or {}).get("strategy_id", "unknown")
+                        logger.info(f"Nueva señal detectada en GitHub: {strategy_id}")
                         await self._process_signal(signal_data)
-                        await loop.run_in_executor(None, self._mark_processed, signal_data["timestamp"])
-                        self.last_processed = signal_data["timestamp"]
+                        if signal_data.get("timestamp"):
+                            await loop.run_in_executor(None, self._mark_processed, signal_data["timestamp"])
+                        self.last_processed = event_id
+                    elif status == "no_signal":
+                        reason = signal_data.get("reason", "sin razón")
+                        logger.info(f"Monitor GitHub: no_signal recibido | reason={reason}")
+                        if trade_logger:
+                            trade_logger.log_signal_rejected(
+                                {"source": "github_poller", "payload": signal_data},
+                                f"NO_SIGNAL:{reason}"
+                            )
+                        self.last_processed = event_id
             except Exception as e:
                 logger.error(f"Error en GitHub Poller: {e}")
             await asyncio.sleep(60)
