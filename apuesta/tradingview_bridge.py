@@ -1,3 +1,4 @@
+import asyncio
 import csv
 import json
 import threading
@@ -138,8 +139,13 @@ class TradingViewBridge:
     async def handle_payload(self, payload: Dict) -> Tuple[Dict, int]:
         self._roll_day()
 
-        # Evaluar outcomes por precio de mercado antes de procesar la nueva señal
-        self._evaluate_outcomes()
+        # Evaluar outcomes en background (fire-and-forget) para no bloquear el webhook.
+        # _evaluate_outcomes usa requests síncrono → corre en thread pool, nunca bloquea el loop.
+        try:
+            loop = asyncio.get_event_loop()
+            loop.run_in_executor(None, self._evaluate_outcomes)
+        except Exception:
+            pass
 
         try:
             symbol = self._normalize_symbol(str(payload.get("symbol", "")))
