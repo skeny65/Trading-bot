@@ -185,19 +185,9 @@ class TradingViewBridge:
 
     async def _handle_entry(self, payload: Dict, symbol: str, action: str, setup: str) -> Tuple[Dict, int]:
         strategy_id = self._strategy_id_for_setup(setup)
-
-        # Alpaca crypto paper no permite abrir cortos. Si llega "sell" sin posición,
-        # se rechaza de forma controlada (200) en vez de provocar error 500.
-        if action == "sell":
-            if self._has_open_position(symbol):
-                return await self._handle_close(symbol, setup)
-            self._register_paper_signal(payload, symbol, action, setup, executed=False, skip_reason="no_open_position_for_sell")
-            self._log_text("IGNORED", symbol, setup, "sell ignored: no open position to close")
-            return {
-                "status": "ignored",
-                "source": "tradingview",
-                "reason": "sell sin posición abierta: no hay nada que cerrar",
-            }, 200
+        # Modo long-only: buy y sell se interpretan como señales de entrada.
+        # El cierre explícito ocurre solo con action == "close".
+        broker_side = "buy" if action == "sell" else action
 
         entry = self._as_float(payload.get("price"))
         sl = self._as_float(payload.get("sl"))
@@ -209,7 +199,7 @@ class TradingViewBridge:
         signal = {
             "strategy_id": strategy_id,
             "symbol": symbol,
-            "action": action,
+            "action": broker_side,
             "confidence": max(self._as_float(payload.get("confidence"), default=0.7), 0.5),
             "size": qty,
             "order_type": "market",
@@ -229,7 +219,8 @@ class TradingViewBridge:
                     "event": "order_placed",
                     "strategy_id": strategy_id,
                     "symbol": symbol,
-                    "side": action,
+                    "side": broker_side,
+                    "requested_side": action,
                     "qty": qty,
                     "entry": entry,
                     "sl": sl,
@@ -244,7 +235,7 @@ class TradingViewBridge:
                 "open_ts": time.time(),
                 "symbol": symbol,
                 "setup": setup,
-                "side": action.upper(),
+                "side": broker_side.upper(),
                 "entry": entry,
                 "sl": sl,
                 "tp": tp_target,
@@ -260,6 +251,8 @@ class TradingViewBridge:
                 "symbol": symbol,
                 "strategy_id": strategy_id,
                 "order_id": result.get("id"),
+                "requested_action": action,
+                "executed_side": broker_side,
                 "qty": qty,
                 "entry": entry,
                 "sl": sl,
