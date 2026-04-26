@@ -271,10 +271,37 @@ async def receive_webhook(request: Request, x_webhook_secret: Optional[str] = He
         logger.warning("webhook rechazado: body vacío")
         raise HTTPException(status_code=400, detail="empty request body")
 
+    decoded = ""
     try:
-        body = json.loads(raw_body.decode("utf-8"))
+        decoded = raw_body.decode("utf-8").strip()
+    except UnicodeDecodeError:
+        logger.warning("webhook rechazado: body no UTF-8")
+        raise HTTPException(status_code=400, detail="invalid body encoding")
+
+    # Intento 1: JSON puro
+    try:
+        body = json.loads(decoded)
     except (UnicodeDecodeError, json.JSONDecodeError):
-        logger.warning("webhook rechazado: body no es JSON válido")
+        body = None
+
+    # Intento 2: quitar fences markdown y texto extra
+    if body is None:
+        cleaned = decoded
+        cleaned = cleaned.replace("```json", "").replace("```", "").strip()
+
+        # Si viene texto adicional, tomar desde la primera llave hasta la última
+        start = cleaned.find("{")
+        end = cleaned.rfind("}")
+        if start != -1 and end != -1 and end > start:
+            candidate = cleaned[start:end + 1]
+            try:
+                body = json.loads(candidate)
+            except json.JSONDecodeError:
+                body = None
+
+    if body is None:
+        preview = decoded[:180].replace("\n", " ")
+        logger.warning(f"webhook rechazado: body no es JSON válido | preview={preview}")
         raise HTTPException(status_code=400, detail="invalid json body")
 
     if not isinstance(body, dict):

@@ -1,0 +1,92 @@
+{
+  "date": "2026-04-26",
+  "generated_at": "2026-04-26T01:30:38.694513",
+  "regime": "UNKNOWN",
+  "decisions": [
+    {
+      "strategy_id": "strategy_001",
+      "verdict": "PAUSE",
+      "regime": "UNKNOWN",
+      "metrics": {
+        "win_rate": 52.447838998717465,
+        "drawdown": -14.10327108189634
+      }
+    },
+    {
+      "strategy_id": "strategy_002",
+      "verdict": "PAUSE",
+      "regime": "UNKNOWN",
+      "metrics": {
+        "win_rate": 49.232940008439,
+        "drawdown": -10.409531304066103
+      }
+    },
+    {
+      "strategy_id": "strategy_003",
+      "verdict": "PAUSE",
+      "regime": "UNKNOWN",
+      "metrics": {
+        "win_rate": 40.75752278777806,
+        "drawdown": -12.239124101623371
+      }
+    }
+  ],
+  "bots": [
+    {
+      "strategy_id": "strategy_001",
+      "status": "PAUSE",
+      "reason": "verdict=PAUSE, regime=UNKNOWN",
+      "metrics": {
+        "win_rate": 52.447838998717465,
+        "drawdown": -14.10327108189634
+      },
+      "last_trade": {
+        "order_id": "4435fd27-ce0c-4263-9cc8-29ea1b258a85",
+        "symbol": "SPY",
+        "side": "buy",
+        "qty": "0.1",
+        "filled_avg_price": "0",
+        "status": "accepted",
+        "recorded_at": "2026-04-26T01:25:23.989528"
+      },
+      "updated_at": "2026-04-26T01:30:38.688183"
+    },
+    {
+      "strategy_id": "strategy_002",
+      "status": "PAUSE",
+      "reason": "verdict=PAUSE, regime=UNKNOWN",
+      "metrics": {
+        "win_rate": 49.232940008439,
+        "drawdown": -10.409531304066103
+      },
+      "last_trade": null,
+      "updated_at": "2026-04-26T01:30:38.690178"
+    },
+    {
+      "strategy_id": "strategy_003",
+      "status": "PAUSE",
+      "reason": "verdict=PAUSE, regime=UNKNOWN",
+      "metrics": {
+        "win_rate": 40.75752278777806,
+        "drawdown": -12.239124101623371
+      },
+      "last_trade": {
+        "order_id": "dry_115230",
+        "symbol": "SPY",
+        "side": "buy",
+        "qty": "0.1",
+        "filled_avg_price": "58.62",
+        "status": "filled",
+        "recorded_at": "2026-04-25T23:17:24.161361"
+      },
+      "updated_at": "2026-04-26T01:30:38.692173"
+    }
+  ],
+  "hindsight_summary": {
+    "total_decisions": 0,
+    "pauses": 0,
+    "holds": 0,
+    "reactivations": 0,
+    "last_decision": null
+  }
+}

@@ -1,0 +1,62 @@
+[
+  {
+    "timestamp": "2026-04-26T01:37:17.841238",
+    "date": "2026-04-26",
+    "bots_activos": 0,
+    "bots_pausados": 0,
+    "total_bots": 3,
+    "win_rate_avg": 47.5,
+    "max_drawdown": -14.1,
+    "regime_name": "Unknown",
+    "regime_confidence": 70.0,
+    "adaptation_score_avg": 50.0
+  },
+  {
+    "timestamp": "2026-04-26T01:45:23.855662",
+    "date": "2026-04-26",
+    "bots_activos": 0,
+    "bots_pausados": 0,
+    "total_bots": 3,
+    "win_rate_avg": 47.5,
+    "max_drawdown": -14.1,
+    "regime_name": "Unknown",
+    "regime_confidence": 70.0,
+    "adaptation_score_avg": 50.0
+  },
+  {
+    "timestamp": "2026-04-26T01:50:14.039177",
+    "date": "2026-04-26",
+    "bots_activos": 0,
+    "bots_pausados": 0,
+    "total_bots": 3,
+    "win_rate_avg": 47.5,
+    "max_drawdown": -14.1,
+    "regime_name": "Unknown",
+    "regime_confidence": 70.0,
+    "adaptation_score_avg": 50.0
+  },
+  {
+    "timestamp": "2026-04-26T01:50:22.895952",
+    "date": "2026-04-26",
+    "bots_activos": 0,
+    "bots_pausados": 0,
+    "total_bots": 3,
+    "win_rate_avg": 47.5,
+    "max_drawdown": -14.1,
+    "regime_name": "Unknown",
+    "regime_confidence": 70.0,
+    "adaptation_score_avg": 50.0
+  },
+  {
+    "timestamp": "2026-04-26T01:55:51.582756",
+    "date": "2026-04-26",
+    "bots_activos": 0,
+    "bots_pausados": 0,
+    "total_bots": 3,
+    "win_rate_avg": 47.5,
+    "max_drawdown": -14.1,
+    "regime_name": "Unknown",
+    "regime_confidence": 70.0,
+    "adaptation_score_avg": 50.0
+  }
+]

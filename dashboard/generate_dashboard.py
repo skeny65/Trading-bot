@@ -13,11 +13,18 @@ class DashboardGenerator:
     Todo el output es un solo archivo HTML auto-contenido.
     """
     
-    def __init__(self, template_path: str = "dashboard_template.html", output_dir: str = "dashboard/output"):
-        # Ajuste de rutas para el nuevo orden
-        self.template_path = template_path if os.path.exists(template_path) else "dashboard_template.html"
+    def __init__(self, template_path: str = "dashboard/template.html", output_dir: str = "dashboard/output"):
+        # Rutas relativas al directorio de trabajo (raíz del proyecto)
+        self.template_path = template_path if os.path.exists(template_path) else "dashboard/template.html"
         self.output_dir = output_dir
+        self.public_dir = "dashboard"
+        self.history_dir = os.path.join(self.public_dir, "history")
+        self.history_json_path = os.path.join(self.public_dir, "dashboard_history.json")
+        self.latest_output_path = os.path.join(self.output_dir, "latest.html")
+        self.public_index_path = os.path.join(self.public_dir, "index.html")
+
         os.makedirs(self.output_dir, exist_ok=True)
+        os.makedirs(self.history_dir, exist_ok=True)
         
     def _load_template(self) -> str:
         with open(self.template_path, 'r', encoding='utf-8') as f:
@@ -29,10 +36,126 @@ class DashboardGenerator:
         """
         try:
             with open(report_path, 'r') as f:
-                return json.load(f)
+                raw = json.load(f)
+            return self._normalize_report_data(raw)
         except FileNotFoundError:
             # Datos de ejemplo para demo
             return self._generate_demo_data()
+
+    def _normalize_report_data(self, raw: Dict) -> Dict:
+        """
+        Adapta distintos formatos de reporte al esquema esperado por el dashboard.
+        """
+        # Si ya está en formato de dashboard, devolver tal cual
+        required = {"fecha", "timestamp", "bots_activos", "bots_pausados", "total_bots", "win_rate_avg", "max_drawdown", "strategies", "decisions"}
+        if isinstance(raw, dict) and required.issubset(set(raw.keys())):
+            return raw
+
+        # Formato de DailyRunner actual
+        # {
+        #   date, generated_at, regime, decisions, bots, hindsight_summary
+        # }
+        bots = raw.get("bots", []) if isinstance(raw, dict) else []
+        decisions = raw.get("decisions", []) if isinstance(raw, dict) else []
+        regime_raw = str(raw.get("regime", "UNKNOWN")) if isinstance(raw, dict) else "UNKNOWN"
+
+        strategies = {}
+        win_rates = []
+        drawdowns = []
+
+        # Curva sintética mínima para visualización cuando no hay equity histórico
+        dates = pd.date_range(end=datetime.now(), periods=30, freq='D')
+        date_labels = [d.strftime("%Y-%m-%d") for d in dates]
+
+        for b in bots:
+            sid = b.get("strategy_id", "unknown")
+            metrics = b.get("metrics", {}) or {}
+            wr = float(metrics.get("win_rate", 50))
+            dd = float(metrics.get("drawdown", -10))
+            pf = float(metrics.get("profit_factor", 1.0))
+            status = str(b.get("status", "HOLD")).upper()
+
+            win_rates.append(wr)
+            drawdowns.append(dd)
+
+            # Genera una serie simple en torno a 10k para no romper el chart
+            drift = (wr - 50.0) / 10000.0
+            noise = np.random.normal(drift, 0.003, len(date_labels))
+            equity = 10000 * np.cumprod(1 + noise)
+
+            strategies[sid] = {
+                "dates": date_labels,
+                "equity": equity.tolist(),
+                "win_rate": round(wr, 2),
+                "drawdown": round(dd, 2),
+                "profit_factor": round(pf, 2),
+                "sharpe": 0.0,
+                "status": status,
+                "adaptation_score": float(b.get("adaptation_score", (b.get("metrics") or {}).get("adaptation_score", 50.0))),
+            }
+
+        # Transformar decisiones al shape esperado por la tabla
+        decisions_norm = []
+        for d in decisions:
+            sid = d.get("strategy_id", "unknown")
+            verdict = str(d.get("verdict", "HOLD")).upper()
+            metrics = d.get("metrics", {}) or {}
+
+            decisions_norm.append({
+                "date": str(raw.get("date", datetime.now().strftime("%Y-%m-%d"))),
+                "bot": sid,
+                "win_rate": round(float(metrics.get("win_rate", 50)), 1),
+                "drawdown": round(float(metrics.get("drawdown", -10)), 1),
+                "profit_factor": round(float(metrics.get("profit_factor", 1.0)), 2),
+                "regime": str(d.get("regime", regime_raw)).lower(),
+                "verdict": verdict,
+                "reason": f"Decision engine verdict: {verdict}",
+            })
+
+        bots_activos = sum(1 for b in bots if str(b.get("status", "")).upper() == "ACTIVE")
+        bots_pausados = sum(1 for b in bots if str(b.get("status", "")).upper() == "PAUSED")
+        total_bots = len(bots)
+
+        regime_name = regime_raw.replace("_", " ").title()
+        regime_icon_map = {
+            "BULL_TREND": "📈",
+            "BEAR_TREND": "📉",
+            "MEAN_REVERTING": "↔️",
+            "HIGH_VOLATILITY": "⚡",
+            "LOW_VOLATILITY": "😴",
+            "UNKNOWN": "❔",
+            "VOLATILE": "⚡",
+        }
+
+        history = []
+        for i in range(30):
+            history.append({
+                "date": (datetime.now() - pd.Timedelta(days=(29 - i))).strftime("%Y-%m-%d"),
+                "regime": regime_raw.lower(),
+            })
+
+        ts_raw = str(raw.get("generated_at", ""))
+        try:
+            ts_fmt = datetime.fromisoformat(ts_raw).strftime("%d/%m/%Y %H:%M:%S")
+        except Exception:
+            ts_fmt = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
+        return {
+            "fecha": str(raw.get("date", datetime.now().strftime("%Y-%m-%d"))),
+            "timestamp": ts_fmt,
+            "bots_activos": bots_activos,
+            "bots_pausados": bots_pausados,
+            "total_bots": total_bots,
+            "win_rate_avg": round(float(np.mean(win_rates)) if win_rates else 0.0, 1),
+            "max_drawdown": round(float(min(drawdowns)) if drawdowns else 0.0, 1),
+            "regime_name": regime_name,
+            "regime_icon": regime_icon_map.get(regime_raw.upper(), "❔"),
+            "regime_confidence": 70.0,
+            "regime_since": (datetime.now() - pd.Timedelta(days=1)).strftime("%Y-%m-%d"),
+            "strategies": strategies,
+            "decisions": decisions_norm,
+            "regime_history": history,
+        }
     
     def _generate_demo_data(self) -> Dict:
         """
@@ -214,6 +337,86 @@ class DashboardGenerator:
             "line": {"color": "#ffa502", "width": 2}, "marker": {"size": 6, "color": "#ffa502"}, "fill": "tozeroy", "fillcolor": "rgba(255, 165, 2, 0.1)"
         }
         return json.dumps([trace])
+
+    def _load_history(self) -> List[Dict]:
+        try:
+            with open(self.history_json_path, 'r', encoding='utf-8') as f:
+                history = json.load(f)
+            return history if isinstance(history, list) else []
+        except FileNotFoundError:
+            return []
+
+    def _save_history(self, history: List[Dict]):
+        with open(self.history_json_path, 'w', encoding='utf-8') as f:
+            json.dump(history[-365:], f, indent=2, ensure_ascii=False)
+
+    def _append_snapshot(self, data: Dict):
+        strategies = data.get("strategies", {}) or {}
+        adaptation_values = [s.get("adaptation_score", 50.0) for s in strategies.values()]
+        snapshot = {
+            "timestamp": datetime.now().isoformat(),
+            "date": datetime.now().strftime("%Y-%m-%d"),
+            "bots_activos": int(data.get("bots_activos", 0)),
+            "bots_pausados": int(data.get("bots_pausados", 0)),
+            "total_bots": int(data.get("total_bots", 0)),
+            "win_rate_avg": float(data.get("win_rate_avg", 0.0)),
+            "max_drawdown": float(data.get("max_drawdown", 0.0)),
+            "regime_name": data.get("regime_name", "Unknown"),
+            "regime_confidence": float(data.get("regime_confidence", 0.0)),
+            "adaptation_score_avg": float(np.mean(adaptation_values)) if adaptation_values else 50.0,
+        }
+        history = self._load_history()
+        history.append(snapshot)
+        self._save_history(history)
+
+    def _compute_history_summary(self) -> Dict:
+        history = self._load_history()
+        if not history:
+            return {
+                "history_entries": 0,
+                "week_win_rate_avg": 0.0,
+                "month_win_rate_avg": 0.0,
+                "week_drawdown_avg": 0.0,
+                "month_drawdown_avg": 0.0,
+                "history_traces": "[]",
+            }
+
+        dates = pd.to_datetime([h.get("date") for h in history], errors='coerce')
+        now = pd.Timestamp(datetime.now().date())
+
+        week_rows = [h for h, d in zip(history, dates) if pd.notna(d) and (now - d).days <= 7]
+        month_rows = [h for h, d in zip(history, dates) if pd.notna(d) and (now - d).days <= 30]
+
+        def avg(rows: List[Dict], key: str) -> float:
+            vals = [float(r.get(key, 0.0)) for r in rows if key in r]
+            return round(float(np.mean(vals)), 2) if vals else 0.0
+
+        history_trace = {
+            "x": [h.get("date") for h in history],
+            "y": [float(h.get("win_rate_avg", 0.0)) for h in history],
+            "type": "scatter",
+            "mode": "lines+markers",
+            "name": "WR Avg",
+            "line": {"color": "#00d4ff", "width": 2},
+        }
+        dd_trace = {
+            "x": [h.get("date") for h in history],
+            "y": [float(h.get("max_drawdown", 0.0)) for h in history],
+            "type": "scatter",
+            "mode": "lines+markers",
+            "name": "Max DD",
+            "line": {"color": "#ff4757", "width": 2},
+            "yaxis": "y2",
+        }
+
+        return {
+            "history_entries": len(history),
+            "week_win_rate_avg": avg(week_rows, "win_rate_avg"),
+            "month_win_rate_avg": avg(month_rows, "win_rate_avg"),
+            "week_drawdown_avg": avg(week_rows, "max_drawdown"),
+            "month_drawdown_avg": avg(month_rows, "max_drawdown"),
+            "history_traces": json.dumps([history_trace, dd_trace]),
+        }
     
     def _build_decision_rows(self, data: Dict) -> str:
         rows = []
@@ -229,22 +432,42 @@ class DashboardGenerator:
     
     def generate(self, report_path: str = None, output_name: str = None) -> str:
         data = self._load_data(report_path) if report_path else self._generate_demo_data()
+        self._append_snapshot(data)
+        history_summary = self._compute_history_summary()
         template = self._load_template()
         wr_val, dd_val = data["win_rate_avg"], data["max_drawdown"]
+        status_badge = (
+            '<span class="status-badge status-active">OPERATIVO</span>' if data["bots_activos"] > 0
+            else '<span class="status-badge status-paused">PAUSADO</span>'
+        )
         replacements = {
             "{{fecha}}": data["fecha"], "{{timestamp}}": data["timestamp"], "{{bots_activos}}": str(data["bots_activos"]), "{{bots_pausados}}": str(data["bots_pausados"]),
             "{{total_bots}}": str(data["total_bots"]), "{{win_rate_avg}}": str(data["win_rate_avg"]), "{{wr_class}}": "metric-positive" if wr_val >= 52 else "metric-negative" if wr_val < 45 else "metric-neutral",
             "{{wr_color}}": "#00ff88" if wr_val >= 52 else "#ff4757" if wr_val < 45 else "#ffa502", "{{max_drawdown}}": str(dd_val), "{{dd_bar_width}}": str(min(abs(dd_val) * 5, 100)),
             "{{regime_name}}": data["regime_name"], "{{regime_icon}}": data["regime_icon"], "{{regime_confidence}}": str(data["regime_confidence"]), "{{regime_since}}": data["regime_since"],
             "{{equity_traces}}": self._build_equity_traces(data), "{{adaptation_traces}}": self._build_adaptation_traces(data), "{{regime_traces}}": self._build_regime_traces(data),
-            "{{metrics_traces}}": self._build_metrics_traces(data), "{{regret_traces}}": self._build_regret_traces(data), "{{decision_rows}}": self._build_decision_rows(data)
+            "{{metrics_traces}}": self._build_metrics_traces(data), "{{regret_traces}}": self._build_regret_traces(data), "{{decision_rows}}": self._build_decision_rows(data),
+            "{{system_status_badge}}": status_badge,
+            "{{history_entries}}": str(history_summary["history_entries"]),
+            "{{week_win_rate_avg}}": str(history_summary["week_win_rate_avg"]),
+            "{{month_win_rate_avg}}": str(history_summary["month_win_rate_avg"]),
+            "{{week_drawdown_avg}}": str(history_summary["week_drawdown_avg"]),
+            "{{month_drawdown_avg}}": str(history_summary["month_drawdown_avg"]),
+            "{{history_traces}}": history_summary["history_traces"],
         }
         html = template
         for placeholder, value in replacements.items(): html = html.replace(placeholder, value)
-        if output_name is None: output_name = f"dashboard_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
-        output_path = os.path.join(self.output_dir, output_name)
-        with open(output_path, 'w', encoding='utf-8') as f: f.write(html)
-        return output_path
+        if output_name is None:
+            output_name = f"dashboard_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+
+        versioned_output_path = os.path.join(self.output_dir, output_name)
+        history_output_path = os.path.join(self.history_dir, output_name)
+
+        for path in [versioned_output_path, self.latest_output_path, self.public_index_path, history_output_path]:
+            with open(path, 'w', encoding='utf-8') as f:
+                f.write(html)
+
+        return self.latest_output_path
 
 if __name__ == "__main__":
     generator = DashboardGenerator()

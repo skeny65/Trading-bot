@@ -59,11 +59,15 @@ function Read-JsonPayload {
     }
 
     Write-Host "Paste JSON payload from Claude." -ForegroundColor Cyan
-    Write-Host "When finished, type END on a new line and press Enter." -ForegroundColor Cyan
+    Write-Host "Type END on a new line to send it." -ForegroundColor Cyan
+    Write-Host "Type EXIT on an empty input to close this window." -ForegroundColor DarkCyan
 
     $lines = New-Object System.Collections.Generic.List[string]
     while ($true) {
         $line = Read-Host
+        if ($line -eq "EXIT" -and $lines.Count -eq 0) {
+            return "__EXIT__"
+        }
         if ($line -eq "END") {
             break
         }
@@ -106,19 +110,18 @@ function Assert-EnvelopeShape {
     }
 }
 
-try {
-    $EnvPath = Resolve-EnvPath -InputPath $EnvPath
-    $secret = Get-EnvValue -Path $EnvPath -Key "WEBHOOK_SECRET"
-    if (-not $secret) {
-        throw "WEBHOOK_SECRET not found in $EnvPath"
-    }
+function Send-WebhookPayload {
+    param(
+        [string]$JsonText,
+        [string]$Secret,
+        [string]$WebhookUrl
+    )
 
-    $jsonText = Read-JsonPayload -Path $JsonFile
-    if (-not $jsonText.Trim()) {
+    if (-not $JsonText.Trim()) {
         throw "Payload is empty"
     }
 
-    $payloadObj = $jsonText | ConvertFrom-Json
+    $payloadObj = $JsonText | ConvertFrom-Json
     Assert-EnvelopeShape -Payload $payloadObj
 
     if (-not $payloadObj.PSObject.Properties.Name.Contains("timestamp")) {
@@ -126,14 +129,49 @@ try {
     }
 
     $payloadFinal = $payloadObj | ConvertTo-Json -Depth 10 -Compress
+    $payloadBytes = [System.Text.Encoding]::UTF8.GetBytes($payloadFinal)
 
-    $response = Invoke-RestMethod -Uri $WebhookUrl -Method POST -Headers @{
-        "X-Webhook-Secret" = $secret
-        "Content-Type" = "application/json"
-    } -Body $payloadFinal
+    return Invoke-RestMethod -Uri $WebhookUrl -Method POST -Headers @{
+        "X-Webhook-Secret" = $Secret
+        "Content-Type" = "application/json; charset=utf-8"
+    } -Body $payloadBytes
+}
 
-    Write-Host "Webhook sent successfully." -ForegroundColor Green
-    Write-Host ($response | ConvertTo-Json -Depth 10)
+try {
+    $EnvPath = Resolve-EnvPath -InputPath $EnvPath
+    $secret = Get-EnvValue -Path $EnvPath -Key "WEBHOOK_SECRET"
+    if (-not $secret) {
+        throw "WEBHOOK_SECRET not found in $EnvPath"
+    }
+
+    if ($JsonFile) {
+        $jsonText = Read-JsonPayload -Path $JsonFile
+        $response = Send-WebhookPayload -JsonText $jsonText -Secret $secret -WebhookUrl $WebhookUrl
+        Write-Host "Webhook sent successfully." -ForegroundColor Green
+        Write-Host ($response | ConvertTo-Json -Depth 10)
+        exit 0
+    }
+
+    while ($true) {
+        try {
+            $jsonText = Read-JsonPayload -Path ""
+            if ($jsonText -eq "__EXIT__") {
+                Write-Host "Signal sender closed." -ForegroundColor Yellow
+                break
+            }
+
+            $response = Send-WebhookPayload -JsonText $jsonText -Secret $secret -WebhookUrl $WebhookUrl
+            Write-Host "Webhook sent successfully." -ForegroundColor Green
+            Write-Host ($response | ConvertTo-Json -Depth 10)
+            Write-Host "Ready for next signal..." -ForegroundColor Cyan
+            Write-Host "----------------------------------------" -ForegroundColor DarkGray
+        }
+        catch {
+            Write-Host "Send failed: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "Try again or type EXIT to close." -ForegroundColor Yellow
+            Write-Host "----------------------------------------" -ForegroundColor DarkGray
+        }
+    }
 }
 catch {
     Write-Error $_.Exception.Message

@@ -207,17 +207,17 @@
 <body>
     <div class="container">
         <h1>StrategyFactory Bot Manager</h1>
-        <p class="subtitle">Dashboard de Monitoreo y Decisiones - {{fecha}}</p>
+        <p class="subtitle">Dashboard de Monitoreo y Decisiones - 2026-04-26</p>
         
         <!-- KPIs Principales -->
         <div class="grid">
             <div class="card">
                 <div class="card-header">
                     <span class="card-title">Bots Activos</span>
-                    {{system_status_badge}}
+                    <span class="status-badge status-active">OPERATIVO</span>
                 </div>
-                <div class="metric-value metric-positive">{{bots_activos}}</div>
-                <div class="metric-label">de {{total_bots}} bots totales</div>
+                <div class="metric-value metric-positive">0</div>
+                <div class="metric-label">de 3 bots totales</div>
             </div>
             
             <div class="card">
@@ -225,7 +225,7 @@
                     <span class="card-title">Bots Pausados</span>
                     <span class="status-badge status-paused">DETENIDO</span>
                 </div>
-                <div class="metric-value metric-negative">{{bots_pausados}}</div>
+                <div class="metric-value metric-negative">0</div>
                 <div class="metric-label">por debajo de umbrales</div>
             </div>
             
@@ -233,10 +233,10 @@
                 <div class="card-header">
                     <span class="card-title">Win Rate Promedio</span>
                 </div>
-                <div class="metric-value {{wr_class}}">{{win_rate_avg}}%</div>
+                <div class="metric-value metric-neutral">47.5%</div>
                 <div class="metric-label">Umbral: 45% pause / 52% reactivate</div>
                 <div class="progress-bar">
-                    <div class="progress-fill" style="width: {{win_rate_avg}}%; background: {{wr_color}}"></div>
+                    <div class="progress-fill" style="width: 47.5%; background: #ffa502"></div>
                 </div>
             </div>
             
@@ -244,10 +244,10 @@
                 <div class="card-header">
                     <span class="card-title">Drawdown Maximo</span>
                 </div>
-                <div class="metric-value metric-negative">{{max_drawdown}}%</div>
+                <div class="metric-value metric-negative">-14.1%</div>
                 <div class="metric-label">Umbral critico: -20%</div>
                 <div class="progress-bar">
-                    <div class="progress-fill" style="width: {{dd_bar_width}}%; background: #ff4757"></div>
+                    <div class="progress-fill" style="width: 70.5%; background: #ff4757"></div>
                 </div>
             </div>
         </div>
@@ -260,10 +260,10 @@
                     <span class="status-badge status-active">LIVE</span>
                 </div>
                 <div class="regime-indicator">
-                    <span class="regime-icon">{{regime_icon}}</span>
+                    <span class="regime-icon">❔</span>
                     <div>
-                        <div style="font-size: 1.3em; color: #00d4ff; font-weight: 600;">{{regime_name}}</div>
-                        <div style="color: #888; margin-top: 5px;">Confianza: {{regime_confidence}}% | Detectado desde: {{regime_since}}</div>
+                        <div style="font-size: 1.3em; color: #00d4ff; font-weight: 600;">Unknown</div>
+                        <div style="color: #888; margin-top: 5px;">Confianza: 70.0% | Detectado desde: 2026-04-25</div>
                     </div>
                 </div>
                 <div id="regime-chart" class="chart-container" style="height: 250px;"></div>
@@ -307,7 +307,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {{decision_rows}}
+                        <tr><td>2026-04-26</td><td><strong>strategy_001</strong></td><td class="metric-positive">52.4%</td><td class="metric-positive">-14.1%</td><td class="metric-negative">1.0</td><td>Unknown</td><td><span class="status-badge status-paused">PAUSE</span></td><td style="color: #888; font-size: 0.9em;">Decision engine verdict: PAUSE</td></tr>
+<tr><td>2026-04-26</td><td><strong>strategy_002</strong></td><td class="metric-positive">49.2%</td><td class="metric-positive">-10.4%</td><td class="metric-negative">1.0</td><td>Unknown</td><td><span class="status-badge status-paused">PAUSE</span></td><td style="color: #888; font-size: 0.9em;">Decision engine verdict: PAUSE</td></tr>
+<tr><td>2026-04-26</td><td><strong>strategy_003</strong></td><td class="metric-negative">40.8%</td><td class="metric-positive">-12.2%</td><td class="metric-negative">1.0</td><td>Unknown</td><td><span class="status-badge status-paused">PAUSE</span></td><td style="color: #888; font-size: 0.9em;">Decision engine verdict: PAUSE</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -330,33 +332,32 @@
             </div>
         </div>
 
-        <!-- Historial del Dashboard -->
+        <!-- Dashboard History -->
         <div class="grid">
             <div class="card full-width">
                 <div class="card-header">
-                    <span class="card-title">Historial del Dashboard</span>
-                    <span style="color: #888; font-size: 0.85em;">Actualiza cada 5 min</span>
+                    <span class="card-title">Dashboard History (Snapshots)</span>
                 </div>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px;">
                     <div>
-                        <div class="metric-label">Días registrados</div>
-                        <div class="metric-value metric-neutral" style="font-size: 1.4em;">{{history_entries}}</div>
+                        <div class="metric-label">Snapshots guardados</div>
+                        <div class="metric-value metric-neutral" style="font-size: 1.4em;">3</div>
                     </div>
                     <div>
                         <div class="metric-label">WR promedio 7d</div>
-                        <div class="metric-value metric-positive" style="font-size: 1.4em;">{{week_win_rate_avg}}%</div>
+                        <div class="metric-value metric-positive" style="font-size: 1.4em;">47.5%</div>
                     </div>
                     <div>
                         <div class="metric-label">WR promedio 30d</div>
-                        <div class="metric-value metric-positive" style="font-size: 1.4em;">{{month_win_rate_avg}}%</div>
+                        <div class="metric-value metric-positive" style="font-size: 1.4em;">47.5%</div>
                     </div>
                     <div>
                         <div class="metric-label">DD promedio 7d</div>
-                        <div class="metric-value metric-negative" style="font-size: 1.4em;">{{week_drawdown_avg}}%</div>
+                        <div class="metric-value metric-negative" style="font-size: 1.4em;">-14.1%</div>
                     </div>
                     <div>
                         <div class="metric-label">DD promedio 30d</div>
-                        <div class="metric-value metric-negative" style="font-size: 1.4em;">{{month_drawdown_avg}}%</div>
+                        <div class="metric-value metric-negative" style="font-size: 1.4em;">-14.1%</div>
                     </div>
                 </div>
                 <div id="history-chart" class="chart-container" style="height: 320px;"></div>
@@ -364,14 +365,13 @@
         </div>
         
         <div class="footer">
-            Generado el {{timestamp}} | Bot Manager v1.0 | Datos en tiempo real desde Alpaca
-            &nbsp;&mdash;&nbsp; Próxima actualización en <span id="refresh-countdown">5:00</span>
+            Generado el 2026-04-26T01:30:38.694513 | Bot Manager v1.0 | Datos en tiempo real desde Alpaca
         </div>
     </div>
     
     <script>
         // Equity Curves Chart
-        var equityData = {{equity_traces}};
+        var equityData = [{"x": ["2026-03-28", "2026-03-29", "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02", "2026-04-03", "2026-04-04", "2026-04-05", "2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26"], "y": [10011.942472370583, 10056.156554785974, 10065.68738230509, 10051.725739064903, 10019.21670666718, 10032.289789464172, 10017.67539552043, 10064.618857463447, 10058.976784313709, 10017.037878295709, 9998.522382962574, 10033.236167974543, 10009.06936674018, 10010.466411922596, 10008.506721027148, 10050.535810060144, 10062.069219390785, 10056.563380094176, 10034.203239090582, 10002.641701479632, 9942.366407399713, 9905.197375237303, 9927.77795454094, 9990.882255590961, 10010.786165900141, 10052.758806534695, 10059.828107873253, 10000.022544059564, 10075.050006220605, 10055.303017149537], "type": "scatter", "mode": "lines", "name": "strategy_001 (PAUSE)", "line": {"color": "#00d4ff", "width": 2}, "hovertemplate": "<b>strategy_001</b><br>Fecha: %{x}<br>Equity: $%{y:,.0f}<br>Status: PAUSE<extra></extra>"}, {"x": ["2026-03-28", "2026-03-29", "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02", "2026-04-03", "2026-04-04", "2026-04-05", "2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26"], "y": [10001.910311740781, 9999.29924299207, 9982.68945055775, 9972.566958548186, 9937.80536546582, 9962.173208250999, 9995.538546655564, 9989.071392823103, 9982.807835001588, 9970.72175741972, 9984.558288972823, 9953.159217279244, 9919.718453043233, 9906.932372902707, 9902.652806805083, 9919.709925676105, 9869.561347885327, 9842.225990245728, 9831.5715014368, 9862.020182098777, 9835.986657065643, 9824.202872530916, 9812.199469996973, 9823.388686302455, 9855.455591794404, 9779.190343301534, 9781.031531201103, 9816.55378394135, 9799.112350680034, 9798.33187532499], "type": "scatter", "mode": "lines", "name": "strategy_002 (PAUSE)", "line": {"color": "#00ff88", "width": 2}, "hovertemplate": "<b>strategy_002</b><br>Fecha: %{x}<br>Equity: $%{y:,.0f}<br>Status: PAUSE<extra></extra>"}, {"x": ["2026-03-28", "2026-03-29", "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02", "2026-04-03", "2026-04-04", "2026-04-05", "2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26"], "y": [9971.702172696148, 9985.439353656719, 10004.762209615648, 9952.227221988356, 9973.96516763387, 9964.063966210786, 9956.937878828614, 9968.66505138993, 9980.273555598294, 9977.565302420397, 9986.488509629382, 10010.650863335177, 10018.166509284376, 10054.204898333544, 10066.401401571195, 10046.858859267108, 10134.338636591023, 10121.142976872618, 10161.316235088576, 10144.036794021456, 10130.590516730532, 10062.18423760256, 10044.910495654774, 10014.580384311243, 10009.117194617833, 9991.542722380713, 10011.699900524376, 9947.374680347799, 9958.918266087465, 10026.60231445632], "type": "scatter", "mode": "lines", "name": "strategy_003 (PAUSE)", "line": {"color": "#ff4757", "width": 2}, "hovertemplate": "<b>strategy_003</b><br>Fecha: %{x}<br>Equity: $%{y:,.0f}<br>Status: PAUSE<extra></extra>"}];
         var equityLayout = {
             paper_bgcolor: 'rgba(0,0,0,0)',
             plot_bgcolor: 'rgba(0,0,0,0)',
@@ -384,7 +384,7 @@
         Plotly.newPlot('equity-chart', equityData, equityLayout, {responsive: true});
         
         // Adaptation Score Chart
-        var adaptData = {{adaptation_traces}};
+        var adaptData = [{"type": "indicator", "mode": "gauge+number", "value": 50.0, "title": {"text": "Score", "font": {"color": "#e0e0e0"}}, "gauge": {"axis": {"range": [0, 100], "tickcolor": "#e0e0e0"}, "bar": {"color": "#00d4ff"}, "bgcolor": "#1a1a3e", "borderwidth": 2, "bordercolor": "#2a2a4a", "steps": [{"range": [0, 40], "color": "rgba(255, 71, 87, 0.3)"}, {"range": [40, 70], "color": "rgba(255, 165, 2, 0.3)"}, {"range": [70, 100], "color": "rgba(0, 255, 136, 0.3)"}], "threshold": {"line": {"color": "white", "width": 4}, "thickness": 0.75, "value": 70}}, "number": {"font": {"color": "#e0e0e0", "size": 40}}}];
         var adaptLayout = {
             paper_bgcolor: 'rgba(0,0,0,0)',
             plot_bgcolor: 'rgba(0,0,0,0)',
@@ -397,7 +397,7 @@
         Plotly.newPlot('adaptation-chart', adaptData, adaptLayout, {responsive: true});
         
         // Regime Probabilities Chart
-        var regimeData = {{regime_traces}};
+        var regimeData = [{"x": ["2026-03-28", "2026-03-29", "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02", "2026-04-03", "2026-04-04", "2026-04-05", "2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26"], "y": [0.8679665421048033, 0.7267762091226587, 0.8338028936074955, 0.7310585805892598, 0.6153729817430045, 0.7856419141906712, 0.7536074640152645, 0.7241846215171044, 0.6265951607722766, 0.805918247549803, 0.6905583890804797, 0.7859205473660807, 0.8393446443804607, 0.7736869441117484, 0.8589004636835811, 0.6024575673135377, 0.8292076418261426, 0.8597422254112076, 0.7611994569342357, 0.6561948887672148, 0.6798876904492799, 0.7483518420817613, 0.8585337965216, 0.8022175488071096, 0.7553435119155071, 0.867703498336885, 0.641571617475852, 0.8687788384875897, 0.6321104711918746, 0.6517648363635076], "type": "scatter", "mode": "lines", "stackgroup": "one", "name": "Unknown", "fill": "tonexty", "line": {"width": 0.5}, "fillcolor": "#888"}];
         var regimeLayout = {
             paper_bgcolor: 'rgba(0,0,0,0)',
             plot_bgcolor: 'rgba(0,0,0,0)',
@@ -410,7 +410,7 @@
         Plotly.newPlot('regime-chart', regimeData, regimeLayout, {responsive: true});
         
         // Metrics Radar/Bar Chart
-        var metricsData = {{metrics_traces}};
+        var metricsData = [{"x": ["strategy_001", "strategy_002", "strategy_003"], "y": [52.45, 49.23, 40.76], "type": "bar", "name": "Win Rate %", "marker": {"color": "#00d4ff"}}, {"x": ["strategy_001", "strategy_002", "strategy_003"], "y": [14.1, 10.41, 12.24], "type": "bar", "name": "Drawdown %", "marker": {"color": "#ff4757"}}, {"x": ["strategy_001", "strategy_002", "strategy_003"], "y": [20.0, 20.0, 20.0], "type": "bar", "name": "PF (x20)", "marker": {"color": "#00ff88"}}];
         var metricsLayout = {
             paper_bgcolor: 'rgba(0,0,0,0)',
             plot_bgcolor: 'rgba(0,0,0,0)',
@@ -424,7 +424,7 @@
         Plotly.newPlot('metrics-chart', metricsData, metricsLayout, {responsive: true});
         
         // Regret Rate Chart
-        var regretData = {{regret_traces}};
+        var regretData = [{"x": ["2026-03-28", "2026-03-29", "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02", "2026-04-03", "2026-04-04", "2026-04-05", "2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26"], "y": [-0.47423739756773986, -2.4740817571090803, -3.0382960660559677, -3.6881777092421677, -2.007138827561685, -0.5076567415836934, -0.9586604221607837, -0.6395547724816381, -1.0381400791427942, -2.0026189100380076, -2.9829133450935537, -2.720233781066872, -4.591742208593314, -6.080030234014921, -4.578767707945308, -2.9526816724489198, -3.4313889947868668, -3.3606876129221925, -5.4753695507563584, -5.042526666795965, -3.4190855112633782, -7.120866690099551, -3.191953410311488, -3.3970224345234032, -4.310661573173765, -3.9543117071556266, -1.8180933438998403, 3.7218309595813617, 3.1535143675913213, 0.8212499018691517], "type": "scatter", "mode": "lines+markers", "name": "Regret Rate", "line": {"color": "#ffa502", "width": 2}, "marker": {"size": 6, "color": "#ffa502"}, "fill": "tozeroy", "fillcolor": "rgba(255, 165, 2, 0.1)"}];
         var regretLayout = {
             paper_bgcolor: 'rgba(0,0,0,0)',
             plot_bgcolor: 'rgba(0,0,0,0)',
@@ -437,7 +437,7 @@
         Plotly.newPlot('regret-chart', regretData, regretLayout, {responsive: true});
 
         // History chart
-        var historyData = {{history_traces}};
+        var historyData = [{"x": ["2026-04-26", "2026-04-26", "2026-04-26"], "y": [47.5, 47.5, 47.5], "type": "scatter", "mode": "lines+markers", "name": "WR Avg", "line": {"color": "#00d4ff", "width": 2}}, {"x": ["2026-04-26", "2026-04-26", "2026-04-26"], "y": [-14.1, -14.1, -14.1], "type": "scatter", "mode": "lines+markers", "name": "Max DD", "line": {"color": "#ff4757", "width": 2}, "yaxis": "y2"}];
         var historyLayout = {
             paper_bgcolor: 'rgba(0,0,0,0)',
             plot_bgcolor: 'rgba(0,0,0,0)',
@@ -454,20 +454,6 @@
             margin: {t: 30, b: 60}
         };
         Plotly.newPlot('history-chart', historyData, historyLayout, {responsive: true});
-
-        // Auto-refresh cada 5 minutos
-        var refreshTimer = setTimeout(function() { location.reload(); }, 300000);
-        // Mostrar cuenta regresiva
-        var countdown = 300;
-        var countEl = document.getElementById('refresh-countdown');
-        if (countEl) {
-            setInterval(function() {
-                countdown--;
-                var m = Math.floor(countdown / 60), s = countdown % 60;
-                countEl.textContent = m + ':' + (s < 10 ? '0' : '') + s;
-                if (countdown <= 0) countdown = 300;
-            }, 1000);
-        }
     </script>
 </body>
 </html>

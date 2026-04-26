@@ -1,79 +1,166 @@
 # esquemas de datos
++
+## archivos de persistencia
 
-## archivos json
+todos los archivos se guardan relativos a la raíz del proyecto.
 
-### bot_status.json
-estado actual de todos los bots.
+---
+
+### `data/bot_status.json`
+
+estado persistente de todos los bots. se actualiza en cada webhook y en cada análisis diario.
+
 ```json
 {
-  "bots": {
-    "strategy_id": {
-      "strategy_id": "string",
-      "symbol": "string",
-      "status": "active | paused | hold",
-      "registered_at": "iso_datetime",
-      "metrics": {
-        "win_rate": "number (0-100)",
-        "drawdown": "number (negative)"
-      }
-    }
+  "strategy_001": {
+    "strategy_id": "strategy_001",
+    "symbol": "SPY",
+    "status": "active",
+    "reason": "",
+    "registered_at": "2026-04-20T09:00:00",
+    "updated_at": "2026-04-26T10:00:00",
+    "metrics": {
+      "win_rate": 52.3,
+      "drawdown": -12.5,
+      "profit_factor": 1.35
+    },
+    "last_trade": "2026-04-25T15:30:00",
+    "trade_count": 42
   }
 }
 ```
 
-### learning_state.json
-estado del modelo de markov y aprendizaje.
+**valores de `status`:** `"active"` | `"paused"` | `"hold"`
+
+---
+
+### `data/reports/latest.json` y `data/reports/YYYY-MM-DD.json`
+
+reporte generado por `DailyRunner` a las 10:00 AM. `latest.json` siempre es el más reciente.
+
+```json
+{
+  "date": "2026-04-26",
+  "generated_at": "2026-04-26T10:00:05.123456",
+  "regime": "UNKNOWN",
+  "decisions": [
+    {
+      "strategy_id": "strategy_001",
+      "verdict": "PAUSE",
+      "regime": "UNKNOWN",
+      "metrics": {
+        "win_rate": 52.4,
+        "drawdown": -14.1,
+        "profit_factor": 1.0
+      }
+    }
+  ],
+  "bots": [
+    {
+      "strategy_id": "strategy_001",
+      "status": "paused",
+      "reason": "Decision engine verdict: PAUSE",
+      "metrics": { "win_rate": 52.4, "drawdown": -14.1, "profit_factor": 1.0 },
+      "last_trade": "2026-04-25T15:30:00",
+      "updated_at": "2026-04-26T10:00:05"
+    }
+  ],
+  "hindsight_summary": {
+    "total_decisions": 10,
+    "correct_pauses": 7,
+    "regret_rate": 0.15
+  }
+}
+```
+
+---
+
+### `data/learning_state.json`
+
+estado del modelo de Markov y aprendizaje adaptativo.
+
 ```json
 {
   "regime_history": [
     {
-      "date": "YYYY-MM-DD",
+      "date": "2026-04-25",
       "regime_name": "bull_trend",
-      "probabilities": [0.8, 0.1, 0.1]
+      "probabilities": [0.8, 0.1, 0.05, 0.05]
     }
-  ]
+  ],
+  "transition_matrix": [[0.7, 0.2, 0.1], [0.3, 0.5, 0.2], [0.1, 0.3, 0.6]],
+  "last_updated": "2026-04-26T10:00:05"
 }
 ```
 
-### hindsight_records.json
-registro de decisiones y evaluaciones retrospectivas.
+---
+
+### `data/hindsight_records.json`
+
+evaluación retrospectiva de decisiones de pausa/reactivación.
+
 ```json
 {
   "records": [
     {
-      "decision_id": "strategy_id_YYYY-MM-DD",
-      "strategy_id": "string",
-      "verdict": "pause | hold | reactivate",
-      "evaluated": "boolean",
+      "decision_id": "strategy_001_2026-04-20",
+      "strategy_id": "strategy_001",
+      "verdict": "pause",
+      "date": "2026-04-20",
+      "evaluated": true,
       "regret_result": {
-        "was_correct": "boolean",
-        "missed_profit": "number"
+        "was_correct": true,
+        "missed_profit": -2.3,
+        "regret_score": 0.12
       }
     }
   ]
 }
 ```
 
-### trades/YYYY-MM-DD.jsonl
-log de trades en formato json lines (una línea = un json).
-```json
-{"_id":"20260425103015_a1b2c3d4", "strategy_id":"rsi", "symbol":"spy", "side":"buy", "qty":10, "pnl":0}
+---
+
+### `data/trades/YYYY-MM-DD.jsonl`
+
+log de trades en formato JSON Lines (una línea = un evento). nunca se modifica, solo append.
+
+```jsonl
+{"_id":"20260426103015_a1b2c3d4","timestamp":"2026-04-26T10:30:15","strategy_id":"strategy_001","symbol":"SPY","side":"buy","qty":10,"price":512.30,"pnl":0,"mode":"live"}
+{"_id":"20260426153000_b2c3d4e5","timestamp":"2026-04-26T15:30:00","strategy_id":"strategy_001","symbol":"SPY","side":"sell","qty":10,"price":518.45,"pnl":61.50,"mode":"live"}
 ```
 
-### reports/YYYY-MM-DD.json
-reporte diario generado por el bot manager.
+archivos anteriores se mueven a `data/trades/archive/` tras 7 días.
+
+---
+
+### `dashboard/dashboard_history.json`
+
+historial de snapshots diarios del dashboard. máximo 365 entradas. se actualiza cada vez que se regenera el dashboard.
+
 ```json
-{
-  "meta": { "date": "YYYY-MM-DD", "execution_mode": "dry_run | live" },
-  "summary": { "total_bots": "integer", "active": "integer" },
-  "market_regime": { "regime_name": "string", "confidence": "number" },
-  "bots": { ... },
-  "decisions": [ ... ]
-}
+[
+  {
+    "timestamp": "2026-04-26T10:00:05.123456",
+    "date": "2026-04-26",
+    "bots_activos": 1,
+    "bots_pausados": 2,
+    "total_bots": 3,
+    "win_rate_avg": 47.8,
+    "max_drawdown": -14.1,
+    "regime_name": "Unknown",
+    "regime_confidence": 70.0,
+    "adaptation_score_avg": 50.0
+  }
+]
 ```
 
-## notas sobre formato jsonl
-* cada línea es un json válido independiente
-* no usar arrays ni objetos multilínea
-* append-only: nunca modificar líneas existentes
-* rotación: archivos se comprimen a .gz después de 7 días
+este archivo alimenta la sección "Historial del Dashboard" con comparativas 7d / 30d.
+
+---
+
+## reglas de formato JSONL
+
+- cada línea es un JSON válido e independiente
+- no usar arrays ni objetos multilínea
+- append-only: nunca modificar líneas existentes
+- los archivos `.jsonl` son rotados a `data/trades/archive/` automáticamente
