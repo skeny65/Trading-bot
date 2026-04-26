@@ -16,7 +16,9 @@ class TelegramNotifier:
     def __init__(self):
         self.token = os.getenv("TELEGRAM_BOT_TOKEN")
         self.chat_id = os.getenv("TELEGRAM_CHAT_ID")
-        self.enabled = bool(self.token and self.chat_id)
+        # Deshabilitar si chat_id no es un número válido (ej: "PENDIENTE")
+        chat_id_valid = bool(self.chat_id and self.chat_id.lstrip('-').isdigit())
+        self.enabled = bool(self.token and chat_id_valid)
         
         # flags de qué notificar
         self.notify_pause = os.getenv("NOTIFY_ON_PAUSE", "true").lower() == "true"

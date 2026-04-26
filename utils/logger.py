@@ -11,7 +11,10 @@ def setup_logger(name: str, log_file: str = None) -> logging.Logger:
     logger.setLevel(logging.INFO)
     if logger.handlers: return logger
     
-    console = logging.StreamHandler()
+    import sys
+    # Forzar UTF-8 en Windows para soportar emojis en consola
+    stream = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1) if sys.platform == 'win32' else sys.stdout
+    console = logging.StreamHandler(stream)
     console.setFormatter(logging.Formatter('%(asctime)s | %(levelname)s | %(message)s'))
     logger.addHandler(console)
     
@@ -31,7 +34,7 @@ def setup_logger(name: str, log_file: str = None) -> logging.Logger:
             fmt = '%(asctime)s | %(message)s'
         
         formatter = logging.Formatter(fmt)
-        file_handler = RotatingFileHandler(log_file, maxBytes=max_bytes, backupCount=backup_count)
+        file_handler = RotatingFileHandler(log_file, maxBytes=max_bytes, backupCount=backup_count, encoding='utf-8')
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
     

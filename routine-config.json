@@ -1,36 +1,50 @@
 {
-  "name": "Daily Strategy Analysis",
+  "name": "Daily Trading Signal Analysis",
+  "description": "Lee estrategias del repo, analiza condiciones de mercado, genera señal y notifica al bot local via webhook.",
   "schedule": "0 9 * * 1-5",
+  "timezone": "America/New_York",
+
   "steps": [
     {
+      "id": "read_strategies",
       "action": "read_github",
-      "repo": "tu-usuario/trading-strategies",
-      "files": ["strategies/*.py"]
+      "repo": "skeny65/Trading-bot",
+      "files": [
+        "strategies/strategy_001.py",
+        "strategies/strategy_002.py",
+        "strategies/strategy_003.py"
+      ]
     },
+
     {
+      "id": "analyze_and_decide",
       "action": "analyze_with_claude",
-      "prompt": "Analyze these strategies using quant metrics...",
-      "output": "signal_decision"
+      "prompt_file": "strategy-prompts/daily_analysis.md",
+      "context_from_steps": ["read_strategies"],
+      "output_variable": "signal_decision"
     },
+
     {
-      "action": "commit_to_github",
-      "file": "signals/today_signal.json",
-      "content": "{{signal_decision}}"
-    },
-    {
+      "id": "send_webhook",
       "action": "trigger_webhook",
-      "url": "https://YOUR_NGROK_URL.ngrok-free.app/webhook",
+      "url": "https://shaft-goliath-shakable.ngrok-free.dev/webhook",
+      "method": "POST",
       "headers": {
-        "X-Webhook-Secret": "YOUR_SECURE_SECRET_FROM_ENV",
+        "X-Webhook-Secret": "{{env.WEBHOOK_SECRET}}",
         "Content-Type": "application/json"
       },
-      "payload": {
-        "strategy_id": "{{strategy_id}}",
-        "symbol": "{{symbol}}",
-        "action": "{{action}}",
-        "confidence": "{{confidence}}",
-        "params": "{{params}}"
-      }
+      "payload": "{{signal_decision}}"
     }
-  ]
+  ],
+
+  "env_vars": {
+    "WEBHOOK_SECRET": "WEBHOOK_SECRET",
+    "GITHUB_TOKEN": "GITHUB_TOKEN"
+  },
+
+  "on_error": "log_and_continue",
+  "notifications": {
+    "on_success": false,
+    "on_error": true
+  }
 }

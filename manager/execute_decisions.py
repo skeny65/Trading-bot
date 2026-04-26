@@ -68,9 +68,11 @@ class DecisionExecutor:
             reason = decision.get("reason", "")
             metrics = decision.get("metrics", {})
             
-            if verdict == "pause":
+            # Normalize verdict to lowercase for comparison
+            verdict_lower = verdict.lower() if verdict else "hold"
+            if verdict_lower == "pause":
                 result = self.apply_pause(bot_id, reason, metrics)
-            elif verdict == "reactivate":
+            elif verdict_lower in ("reactivate", "active"):
                 result = self.apply_reactivate(bot_id, reason, metrics)
             else:
                 result = self.apply_hold(bot_id, reason)

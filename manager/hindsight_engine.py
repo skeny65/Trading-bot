@@ -12,8 +12,9 @@ class HindsightEngine:
     Analiza decisiones pasadas para calcular el arrepentimiento (Regret Rate).
     Compara qué hubiera pasado si no se hubiera pausado una estrategia.
     """
-    def __init__(self, history_path: str = "data/decisions_history.json"):
-        self.history_path = history_path
+    def __init__(self, history_path: str = "data/decisions_history.json", records_path: str = None):
+        # Accept records_path as alias for backward compatibility
+        self.history_path = records_path if records_path is not None else history_path
         self.data_source = AlpacaDataSource()
         self.calculator = RegretCalculator()
         self.trade_query = TradeQuery()
@@ -55,10 +56,16 @@ class HindsightEngine:
         
         if not last_decision:
             return RegretResult(
-                decision_id="none", strategy_id=strategy_id, symbol="N/A",
-                decision_date=datetime.now().isoformat(), verdict="NONE",
-                was_correct=True, opportunity_cost_pct=0.0,
-                regime_at_decision="N/A", days_evaluated=0
+                decision_id="none",
+                strategy_id=strategy_id,
+                decision_date=datetime.now().isoformat(),
+                verdict="NONE",
+                was_correct=True,
+                opportunity_cost_pct=0.0,
+                missed_trades=0,
+                missed_profit=0.0,
+                regime_at_decision="N/A",
+                days_evaluated=0,
             )
 
         price_then = last_decision["price_at_decision"]
@@ -106,3 +113,68 @@ class HindsightEngine:
         # Lógica simplificada: si el arrepentimiento promedio es positivo, el score sube.
         # Esto se integraría con el Learning Engine en el futuro.
         return 50.0 # Placeholder para lógica compleja de arrepentimiento acumulado
+
+    def should_override_pause(
+        self, strategy_id: str, regime: str, adaptation_score: float
+    ) -> tuple:
+        """
+        Determina si el Learning Engine debe anular una decisión de PAUSE.
+
+        Retorna:
+            (bool, str): (should_override, reason)
+
+        Lógica:
+        - Si el adaptation_score > 70 (muchas pausas erróneas históricamente)
+          Y el régimen actual no es bear, se recomienda override a HOLD.
+        - Si hay pocas pausas en el historial, no hay base suficiente → no override.
+        """
+        try:
+            with open(self.history_path, 'r') as f:
+                history = json.load(f)
+        except Exception:
+            return False, "sin historial de decisiones"
+
+        strategy_history = [d for d in history if d["strategy_id"] == strategy_id]
+
+        # Sin historial suficiente → no podemos decidir
+        if len(strategy_history) < 3:
+            return False, "historial insuficiente para override"
+
+        # Contar pausas incorrectas recientes (últimas 10 decisiones)
+        recent = strategy_history[-10:]
+        pauses = [d for d in recent if d.get("verdict") == "PAUSE"]
+        if not pauses:
+            return False, "sin pausas recientes para evaluar"
+
+        # Régimen bear → nunca override, la pausa es correcta
+        is_bear = "BEAR" in regime.upper()
+        if is_bear:
+            return False, f"régimen {regime} no justifica override"
+
+        # Si adaptation_score es alto → históricamente las pausas fueron malas
+        if adaptation_score >= 70:
+            return True, (
+                f"override: adaptation_score={adaptation_score:.1f} indica pausas históricamente incorrectas"
+            )
+
+        return False, f"adaptation_score={adaptation_score:.1f} no justifica override"
+
+    def get_summary(self) -> Dict:
+        """Resumen del historial de decisiones para el reporte diario."""
+        try:
+            with open(self.history_path, 'r') as f:
+                history = json.load(f)
+        except Exception:
+            history = []
+
+        pauses = [d for d in history if d.get("verdict") == "PAUSE"]
+        holds = [d for d in history if d.get("verdict") == "HOLD"]
+        reactivations = [d for d in history if d.get("verdict") == "REACTIVATE"]
+
+        return {
+            "total_decisions": len(history),
+            "pauses": len(pauses),
+            "holds": len(holds),
+            "reactivations": len(reactivations),
+            "last_decision": history[-1] if history else None,
+        }

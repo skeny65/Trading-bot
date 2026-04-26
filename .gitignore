@@ -1,0 +1,16 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+
+# Local secrets
+.env
+
+# Runtime outputs
+logs/*.log
+logs/dry_run/*.jsonl
+data/bot_status.json
+data/hindsight_records.json
+data/reports/latest.json

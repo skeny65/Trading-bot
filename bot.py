@@ -244,13 +244,55 @@ async def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
 @app.post("/webhook")
-async def receive_webhook(signal: TradingSignal, x_webhook_secret: Optional[str] = Header(None)):
+async def receive_webhook(request: Request, x_webhook_secret: Optional[str] = Header(None)):
     expected_secret = os.getenv("WEBHOOK_SECRET")
     if expected_secret and x_webhook_secret != expected_secret:
         raise HTTPException(status_code=401, detail="unauthorized")
+
+    raw_body = await request.body()
+    if not raw_body:
+        logger.warning("webhook rechazado: body vacío")
+        raise HTTPException(status_code=400, detail="empty request body")
+
+    try:
+        body = json.loads(raw_body.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        logger.warning("webhook rechazado: body no es JSON válido")
+        raise HTTPException(status_code=400, detail="invalid json body")
+
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="invalid payload")
+
+    # Acepta envelope completo de rutina para monitoreo continuo
+    # Formato esperado: {timestamp, signal, status, processed, reason?}
+    if "status" in body and "signal" in body:
+        status = str(body.get("status", "")).lower()
+        if status != "pending":
+            reason = body.get("reason", "no_signal")
+            logger.info(f"webhook monitor recibido: status={status}, reason={reason}")
+            if trade_logger:
+                trade_logger.log_signal_rejected(
+                    {"source": "routine", "payload": body},
+                    f"NO_SIGNAL:{reason}"
+                )
+            return {
+                "status": "received_no_signal",
+                "processed": True,
+                "reason": reason
+            }
+
+        signal_payload = body.get("signal") or {}
+    else:
+        # Compatibilidad hacia atrás: payload directo de señal
+        signal_payload = body
+
+    try:
+        signal = TradingSignal(**signal_payload)
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=f"invalid signal payload: {e}")
     
     if bot_registry and bot_registry.is_paused(signal.strategy_id):
-        if telegram.enabled:
+        if telegram and telegram.enabled:
             await telegram.send_signal_rejected(signal.dict(), "PAUSED")
         return {"status": "rejected", "reason": "bot is paused by manager"}
     
@@ -258,9 +300,11 @@ async def receive_webhook(signal: TradingSignal, x_webhook_secret: Optional[str]
         processed = signal_processor.validate(signal)
         order_result = await order_router.place_order(processed)
         bot_registry.record_trade(signal.strategy_id, order_result)
-        return {"status": "executed", "order_id": getattr(order_result, 'id', 'closed')}
+
+        order_id = order_result.get("id", "closed") if isinstance(order_result, dict) else getattr(order_result, "id", "closed")
+        return {"status": "executed", "order_id": order_id}
     except Exception as e:
-        if telegram.enabled:
+        if telegram and telegram.enabled:
             await telegram.send_order_error(signal.strategy_id, str(e), signal.dict())
         logger.error(f"error ejecutando orden: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
