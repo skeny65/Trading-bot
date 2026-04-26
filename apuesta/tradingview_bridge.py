@@ -200,11 +200,8 @@ class TradingViewBridge:
             "time_in_force": "gtc",
         }
 
-        # En live Alpaca admite brackets para market/limit con stop_loss y take_profit.
-        if sl and sl > 0:
-            signal["stop_loss"] = {"stop_price": round(sl, 4)}
-        if tp_target and tp_target > 0:
-            signal["take_profit"] = {"limit_price": round(tp_target, 4)}
+        # No enviamos bracket SL/TP a Alpaca — TradingView gestiona los cierres
+        # via alertas separadas (action: close / sell). Evita margen adicional en paper.
 
         try:
             result = await self.order_router.place_order(signal)
