@@ -20,8 +20,11 @@ class OrderRouter:
             "symbol": signal.get("symbol"),
             "qty": signal.get("size", 0.1),
             "side": signal.get("action", "buy").lower(),
-            "type": "market",
-            "time_in_force": "day"
+            "type": signal.get("order_type", "market"),
+            "time_in_force": signal.get("time_in_force", "day"),
+            "limit_price": signal.get("limit_price"),
+            "stop_loss": signal.get("stop_loss"),
+            "take_profit": signal.get("take_profit"),
         }
         
         result = self.client.place_order(order_request)
@@ -33,6 +36,11 @@ class OrderRouter:
             "confidence": signal.get("confidence")
         }
         
+        return result
+
+    async def close_position(self, symbol: str) -> Dict:
+        result = self.client.close_position(symbol)
+        result["execution_mode"] = "dry_run" if self.dry_run else "live"
         return result
 
     async def cancel_for_bot(self, bot_id: str):

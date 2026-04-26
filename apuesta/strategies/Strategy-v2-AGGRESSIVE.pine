@@ -1,0 +1,90 @@
+//@version=5
+indicator("Strategy-v2-AGGRESSIVE", overlay=true, max_labels_count=500)
+
+// === INPUTS (RELAJADOS) ===
+emaPullbackLen = input.int(20, "EMA Pullback")
+rsiLen         = input.int(14, "RSI Length")
+rsiLongMin     = input.float(30, "RSI Long Min")
+rsiLongMax     = input.float(70, "RSI Long Max")
+rsiShortMin    = input.float(30, "RSI Short Min")
+rsiShortMax    = input.float(70, "RSI Short Max")
+atrLen         = input.int(14, "ATR Length")
+slAtrMult      = input.float(1.5, "SL ATR Mult")
+tpAtrMult      = input.float(2.0, "TP ATR Mult")
+
+// === INDICADORES ===
+ema20    = ta.ema(close, emaPullbackLen)
+rsiVal   = ta.rsi(close, rsiLen)
+atrValue = ta.atr(atrLen)
+
+// === FILTROS RELAJADOS ===
+rsiOkLong  = rsiVal > rsiLongMin  and rsiVal < rsiLongMax
+rsiOkShort = rsiVal > rsiShortMin and rsiVal < rsiShortMax
+
+// === CANDLE PATTERNS (SIMPLIFICADOS) ===
+bodySize  = math.abs(close - open)
+rng       = high - low
+bodyUp    = close > open
+bodyDown  = close < open
+
+bullishCandle = bodyUp and bodySize > rng * 0.3
+bearishCandle = bodyDown and bodySize > rng * 0.3
+
+// === SETUP A - EMA20 pullback ===
+nearEma20Long  = low  <= ema20 and close > ema20
+nearEma20Short = high >= ema20 and close < ema20
+
+longA  = nearEma20Long  and bullishCandle and rsiOkLong
+shortA = nearEma20Short and bearishCandle and rsiOkShort
+
+// === SETUP B - RSI + vela (minimalista) ===
+longB  = bodyUp   and rsiVal < 50 and rsiOkLong
+shortB = bodyDown and rsiVal > 50 and rsiOkShort
+
+// === SETUP C - Simple breakout ===
+breakoutLong  = close > high[1] and bodyUp
+breakoutShort = close < low[1]  and bodyDown
+
+longC  = breakoutLong  and rsiOkLong
+shortC = breakoutShort and rsiOkShort
+
+// === SIGNALS ===
+longSignal  = longA or longB or longC
+shortSignal = shortA or shortB or shortC
+
+setupLongLabel  = longA ? "A" : longB ? "B" : longC ? "C" : ""
+setupShortLabel = shortA ? "A" : shortB ? "B" : shortC ? "C" : ""
+
+// === SL/TP ===
+longSl  = close - slAtrMult * atrValue
+longTp  = close + tpAtrMult * atrValue
+shortSl = close + slAtrMult * atrValue
+shortTp = close - tpAtrMult * atrValue
+
+// === PLOTS ===
+plot(ema20, "EMA20", color=color.aqua, linewidth=1)
+
+plotshape(longSignal,  title="Long",  location=location.belowbar, style=shape.triangleup,   color=color.green, size=size.small, text="L")
+plotshape(shortSignal, title="Short", location=location.abovebar, style=shape.triangledown, color=color.red,   size=size.small, text="S")
+
+if longSignal
+    label.new(bar_index, low,  setupLongLabel,  style=label.style_label_up,   color=color.green, textcolor=color.white, size=size.tiny)
+if shortSignal
+    label.new(bar_index, high, setupShortLabel, style=label.style_label_down, color=color.red,   textcolor=color.white, size=size.tiny)
+
+plot(longSignal  ? longSl  : na, "Long SL",  color=color.new(color.red,   0), style=plot.style_circles, linewidth=2)
+plot(longSignal  ? longTp  : na, "Long TP",  color=color.new(color.green, 0), style=plot.style_circles, linewidth=2)
+plot(shortSignal ? shortSl : na, "Short SL", color=color.new(color.red,   0), style=plot.style_circles, linewidth=2)
+plot(shortSignal ? shortTp : na, "Short TP", color=color.new(color.green, 0), style=plot.style_circles, linewidth=2)
+
+// === ALERTS ===
+alertcondition(longSignal,  "Long Signal",  message="long")
+alertcondition(shortSignal, "Short Signal", message="short")
+
+if longSignal
+    msgL = '{"symbol":"' + syminfo.ticker + '","action":"buy","setup":"' + setupLongLabel + '","price":' + str.tostring(close) + ',"sl":' + str.tostring(math.round(longSl, 2)) + ',"tp":' + str.tostring(math.round(longTp, 2)) + '}'
+    alert(msgL, alert.freq_once_per_bar_close)
+
+if shortSignal
+    msgS = '{"symbol":"' + syminfo.ticker + '","action":"sell","setup":"' + setupShortLabel + '","price":' + str.tostring(close) + ',"sl":' + str.tostring(math.round(shortSl, 2)) + ',"tp":' + str.tostring(math.round(shortTp, 2)) + '}'
+    alert(msgS, alert.freq_once_per_bar_close)

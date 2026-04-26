@@ -1,0 +1,114 @@
+//@version=5
+indicator("apuesta-estrategia-v5-SAFE", overlay=true, max_labels_count=500)
+
+// Modelo: $2 loss / $1 reward (R:R 2:1 adverso) — requiere WR > 66.7%
+// TF: 15m. Objetivo 1-2 señales/hora. Setups:
+//   A = VWAP Mean-Reversion Fade
+//   B = EMA Ribbon Pullback (9>21>50 stack)
+// Filtros: ATR band, ADX>18, sesión London+NY, cooldown 30m, trend EMA200
+
+emaFast   = input.int(9,   "EMA Fast")
+emaMid    = input.int(21,  "EMA Mid")
+emaSlow   = input.int(50,  "EMA Slow")
+emaTrend  = input.int(200, "EMA Trend")
+rsiLen    = input.int(14,  "RSI Length")
+rsiOB     = input.float(72, "RSI OB")
+rsiOS     = input.float(28, "RSI OS")
+bbLen     = input.int(20,  "Stdev Length")
+bbMult    = input.float(2.0, "Stdev Mult")
+atrLen    = input.int(14,  "ATR Length")
+atrMinPct = input.float(0.0035, "ATR min %")
+atrMaxPct = input.float(0.0120, "ATR max %")
+adxLen    = input.int(14, "ADX Length")
+adxMin    = input.float(18, "ADX min")
+volLen    = input.int(20, "Vol SMA")
+volMultA  = input.float(1.5, "Vol mult A")
+useSession = input.bool(true, "Sesión 07-16 UTC")
+cooldownBars = input.int(2, "Cooldown bars")
+slPct     = input.float(0.008, "SL %")
+
+ema9=ta.ema(close,emaFast)
+ema21=ta.ema(close,emaMid)
+ema50=ta.ema(close,emaSlow)
+ema200=ta.ema(close,emaTrend)
+rsiV=ta.rsi(close,rsiLen)
+atrV=ta.atr(atrLen)
+[dp,dm,adxV]=ta.dmi(adxLen,adxLen)
+vwapV=ta.vwap(hlc3)
+dev=bbMult*ta.stdev(close,bbLen)
+vwUp=vwapV+dev
+vwLo=vwapV-dev
+volMa=ta.sma(volume,volLen)
+
+atrPct=atrV/close
+volRegOk=atrPct>=atrMinPct and atrPct<=atrMaxPct
+adxOk=adxV>=adxMin
+sessionOk=not useSession or (hour>=7 and hour<16)
+trendBull=close>ema200
+trendBear=close<ema200
+stackBull=ema9>ema21 and ema21>ema50
+stackBear=ema9<ema21 and ema21<ema50
+
+bull=close>open
+bear=close<open
+bodySz=math.abs(close-open)
+pinBull=low<math.min(open,close)-bodySz*0.6 and bull
+pinBear=high>math.max(open,close)+bodySz*0.6 and bear
+engBull=bull and close>high[1] and open<=close[1]
+engBear=bear and close<low[1] and open>=close[1]
+
+volSpike=volume>volMa*volMultA
+longA=low<=vwLo and close>vwLo and rsiV<rsiOS and (pinBull or engBull) and volSpike and trendBull
+shortA=high>=vwUp and close<vwUp and rsiV>rsiOB and (pinBear or engBear) and volSpike and trendBear
+
+pullL=low<=ema21 and close>ema21 and stackBull and trendBull and bull
+pullS=high>=ema21 and close<ema21 and stackBear and trendBear and bear
+stK=ta.sma(ta.stoch(close,high,low,14),3)
+stD=ta.sma(stK,3)
+stUp=ta.crossover(stK,stD) and stK<40
+stDn=ta.crossunder(stK,stD) and stK>60
+longB=pullL and stUp
+shortB=pullS and stDn
+
+baseL=(longA or longB) and volRegOk and adxOk and sessionOk
+baseS=(shortA or shortB) and volRegOk and adxOk and sessionOk
+
+var int lastBar=na
+canFire=na(lastBar) or (bar_index-lastBar)>=cooldownBars
+longSig=baseL and canFire
+shortSig=baseS and canFire
+if longSig or shortSig
+    lastBar:=bar_index
+
+setL=longA?"A":longB?"B":""
+setS=shortA?"A":shortB?"B":""
+
+slL=close*(1-slPct)
+tpL=close*(1+slPct*0.5)
+slS=close*(1+slPct)
+tpS=close*(1-slPct*0.5)
+
+plot(ema9,color=color.yellow,linewidth=1)
+plot(ema21,color=color.aqua,linewidth=1)
+plot(ema50,color=color.orange,linewidth=2)
+plot(ema200,color=color.red,linewidth=2)
+plot(vwapV,color=color.new(color.purple,20),linewidth=2)
+plot(vwUp,color=color.new(color.gray,60))
+plot(vwLo,color=color.new(color.gray,60))
+
+plotshape(longSig,location=location.belowbar,style=shape.triangleup,color=color.green,size=size.small,text="L")
+plotshape(shortSig,location=location.abovebar,style=shape.triangledown,color=color.red,size=size.small,text="S")
+if longSig
+    label.new(bar_index,low,setL,style=label.style_label_up,color=color.green,textcolor=color.white,size=size.tiny)
+if shortSig
+    label.new(bar_index,high,setS,style=label.style_label_down,color=color.red,textcolor=color.white,size=size.tiny)
+
+alertcondition(longSig,"Long Signal",message="long")
+alertcondition(shortSig,"Short Signal",message="short")
+
+if longSig
+    msgL='{"symbol":"'+syminfo.ticker+'","action":"buy","setup":"'+setL+'","price":'+str.tostring(close)+',"sl":'+str.tostring(math.round(slL,2))+',"tp":'+str.tostring(math.round(tpL,2))+'}'
+    alert(msgL,alert.freq_once_per_bar_close)
+if shortSig
+    msgS='{"symbol":"'+syminfo.ticker+'","action":"sell","setup":"'+setS+'","price":'+str.tostring(close)+',"sl":'+str.tostring(math.round(slS,2))+',"tp":'+str.tostring(math.round(tpS,2))+'}'
+    alert(msgS,alert.freq_once_per_bar_close)

@@ -1,0 +1,93 @@
+//@version=5
+indicator("apuesta-estrategia-v3-SCALP", overlay=true, max_labels_count=500)
+
+// Modelo: $2 risk / $0.5 reward (R:R 1:4 invertido, webhook usa REWARD_USDT=0.5)
+// Requiere WR >80% → scalping mean-reversion multi-setup
+// TF recomendado: 3m o 5m
+
+emaFast    = input.int(9,  "EMA Fast")
+emaSlow    = input.int(21, "EMA Slow")
+emaTrend   = input.int(50, "EMA Trend")
+bbLen      = input.int(20, "BB Length")
+bbMult     = input.float(2.0, "BB Mult")
+kcLen      = input.int(20, "Keltner Length")
+kcMult     = input.float(1.5, "Keltner ATR Mult")
+rsiLen     = input.int(14, "RSI Length")
+rsiOBext   = input.float(70, "RSI OB")
+rsiOSext   = input.float(30, "RSI OS")
+atrLen     = input.int(14, "ATR Length")
+slAtrMult  = input.float(1.5, "SL ATR Mult")
+
+ema9 = ta.ema(close, emaFast)
+ema21 = ta.ema(close, emaSlow)
+ema50 = ta.ema(close, emaTrend)
+rsiVal = ta.rsi(close, rsiLen)
+atrVal = ta.atr(atrLen)
+vwapVal = ta.vwap(hlc3)
+bbBasis = ta.sma(close, bbLen)
+bbDev   = bbMult * ta.stdev(close, bbLen)
+bbUpper = bbBasis + bbDev
+bbLower = bbBasis - bbDev
+kcBasis = ta.ema(close, kcLen)
+kcUpper = kcBasis + kcMult * atrVal
+kcLower = kcBasis - kcMult * atrVal
+
+trendUp = close > ema50
+trendDown = close < ema50
+bodyUp = close > open
+bodyDown = close < open
+bodySize = math.abs(close - open)
+rng = high - low
+decisiveUp   = bodyUp   and bodySize > rng * 0.25
+decisiveDown = bodyDown and bodySize > rng * 0.25
+
+// Setup A: Bollinger bounce
+longA  = low <= bbLower and close > bbLower and decisiveUp and rsiVal < 50
+shortA = high >= bbUpper and close < bbUpper and decisiveDown and rsiVal > 50
+// Setup B: EMA9 micro-pullback
+longB  = trendUp   and low  <= ema9 and close > ema9 and decisiveUp   and close > ema21
+shortB = trendDown and high >= ema9 and close < ema9 and decisiveDown and close < ema21
+// Setup C: VWAP rejection
+longC  = trendUp   and low  <= vwapVal and close > vwapVal and decisiveUp
+shortC = trendDown and high >= vwapVal and close < vwapVal and decisiveDown
+// Setup D: RSI extremo + reversal
+longD  = rsiVal < rsiOSext and decisiveUp
+shortD = rsiVal > rsiOBext and decisiveDown
+// Setup E: Keltner
+longE  = low <= kcLower and close > kcLower and decisiveUp
+shortE = high >= kcUpper and close < kcUpper and decisiveDown
+
+longSignal  = longA or longB or longC or longD or longE
+shortSignal = shortA or shortB or shortC or shortD or shortE
+setupLongLabel  = longA ? "A" : longB ? "B" : longC ? "C" : longD ? "D" : longE ? "E" : ""
+setupShortLabel = shortA ? "A" : shortB ? "B" : shortC ? "C" : shortD ? "D" : shortE ? "E" : ""
+
+longSl  = close - slAtrMult * atrVal
+longTp  = close + (slAtrMult * atrVal) * 0.25
+shortSl = close + slAtrMult * atrVal
+shortTp = close - (slAtrMult * atrVal) * 0.25
+
+plot(ema9,  color=color.yellow, linewidth=1)
+plot(ema21, color=color.aqua,   linewidth=1)
+plot(ema50, color=color.orange, linewidth=2)
+plot(vwapVal, color=color.new(color.purple, 20), linewidth=2)
+plot(bbUpper, color=color.new(color.gray, 50))
+plot(bbLower, color=color.new(color.gray, 50))
+
+plotshape(longSignal,  location=location.belowbar, style=shape.triangleup,   color=color.green, size=size.small, text="L")
+plotshape(shortSignal, location=location.abovebar, style=shape.triangledown, color=color.red,   size=size.small, text="S")
+if longSignal
+    label.new(bar_index, low,  setupLongLabel,  style=label.style_label_up,   color=color.green, textcolor=color.white, size=size.tiny)
+if shortSignal
+    label.new(bar_index, high, setupShortLabel, style=label.style_label_down, color=color.red,   textcolor=color.white, size=size.tiny)
+
+alertcondition(longSignal,  "Long Signal",  message="long")
+alertcondition(shortSignal, "Short Signal", message="short")
+
+if longSignal
+    msgL = '{"symbol":"' + syminfo.ticker + '","action":"buy","setup":"' + setupLongLabel + '","price":' + str.tostring(close) + ',"sl":' + str.tostring(math.round(longSl, 2)) + ',"tp":' + str.tostring(math.round(longTp, 2)) + '}'
+    alert(msgL, alert.freq_once_per_bar_close)
+
+if shortSignal
+    msgS = '{"symbol":"' + syminfo.ticker + '","action":"sell","setup":"' + setupShortLabel + '","price":' + str.tostring(close) + ',"sl":' + str.tostring(math.round(shortSl, 2)) + ',"tp":' + str.tostring(math.round(shortTp, 2)) + '}'
+    alert(msgS, alert.freq_once_per_bar_close)

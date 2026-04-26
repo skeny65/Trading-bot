@@ -1,0 +1,94 @@
+//@version=5
+indicator("apuesta-estrategia-v1", overlay=true, max_labels_count=500)
+
+// APUESTA-ESTRATEGIA-v1
+// Basada en analisis real de 20 trades. Mejoras:
+//   SL/TP 2.0x ATR, ATR min 0.10%, filtro horario 14-20 UTC,
+//   sin Setup C, longs mas exigentes, shorts mas permisivos en trendDown.
+// Modelo: $3 risk / $3 reward (R:R 1:1)
+
+emaTrendLen    = input.int(50, "EMA Trend")
+emaPullbackLen = input.int(20, "EMA Pullback")
+rsiLen         = input.int(14, "RSI Length")
+rsiLongMin     = input.float(35, "RSI Long Min")
+rsiLongMax     = input.float(70, "RSI Long Max")
+rsiShortMin    = input.float(25, "RSI Short Min")
+rsiShortMax    = input.float(70, "RSI Short Max")
+atrLen         = input.int(14, "ATR Length")
+atrMinPct      = input.float(0.10, "ATR Min %")
+slAtrMult      = input.float(2.0, "SL ATR Mult")
+tpAtrMult      = input.float(2.0, "TP ATR Mult")
+sessionOnly    = input.bool(true, "Solo sesion US")
+hourStart      = input.int(14, "Hora inicio UTC")
+hourEnd        = input.int(20, "Hora fin UTC")
+
+currentHourUTC = hour(time, "UTC")
+inSession = not sessionOnly or (currentHourUTC >= hourStart and currentHourUTC < hourEnd)
+
+ema50    = ta.ema(close, emaTrendLen)
+ema20    = ta.ema(close, emaPullbackLen)
+rsiVal   = ta.rsi(close, rsiLen)
+atrValue = ta.atr(atrLen)
+
+trendUp   = close > ema50
+trendDown = close < ema50
+rsiOkLong  = rsiVal > rsiLongMin  and rsiVal < rsiLongMax
+rsiOkShort = rsiVal > rsiShortMin and rsiVal < rsiShortMax
+atrOk      = atrValue / close * 100 > atrMinPct
+
+bodySize = math.abs(close - open)
+rng      = high - low
+bodyUp   = close > open
+bodyDown = close < open
+bullishCandle = bodyUp   and bodySize > rng * 0.35
+bearishCandle = bodyDown and bodySize > rng * 0.35
+
+nearEma20Long  = low  <= ema20 and close > ema20
+nearEma20Short = high >= ema20 and close < ema20
+longA  = trendUp   and nearEma20Long  and bullishCandle and rsiOkLong  and atrOk and inSession
+shortA = trendDown and nearEma20Short and bearishCandle and rsiOkShort and atrOk and inSession
+
+breakoutLong  = close > high[1] and bodyUp   and bodySize > rng * 0.40
+breakoutShort = close < low[1]  and bodyDown and bodySize > rng * 0.30
+longB  = trendUp   and breakoutLong  and rsiOkLong  and atrOk and inSession
+shortB = trendDown and breakoutShort and rsiOkShort and atrOk and inSession
+
+twoBullish = bodyUp   and close[1] > open[1]
+twoBearish = bodyDown and close[1] < open[1]
+longD  = trendUp   and twoBullish and close > close[1] and rsiOkLong  and atrOk and inSession
+shortD = trendDown and twoBearish and close < close[1] and rsiOkShort and atrOk and inSession
+
+longSignal  = longA or longB or longD
+shortSignal = shortA or shortB or shortD
+setupLongLabel  = longA ? "A" : longB ? "B" : longD ? "D" : ""
+setupShortLabel = shortA ? "A" : shortB ? "B" : shortD ? "D" : ""
+
+longSl  = close - slAtrMult * atrValue
+longTp  = close + tpAtrMult * atrValue
+shortSl = close + slAtrMult * atrValue
+shortTp = close - tpAtrMult * atrValue
+
+plot(ema50, "EMA50", color=color.orange, linewidth=2)
+plot(ema20, "EMA20", color=color.aqua,   linewidth=1)
+bgcolor(inSession ? color.new(color.green, 92) : na)
+plotshape(longSignal,  location=location.belowbar, style=shape.triangleup,   color=color.green, size=size.small, text="L")
+plotshape(shortSignal, location=location.abovebar, style=shape.triangledown, color=color.red,   size=size.small, text="S")
+if longSignal
+    label.new(bar_index, low,  setupLongLabel,  style=label.style_label_up,   color=color.green, textcolor=color.white, size=size.tiny)
+if shortSignal
+    label.new(bar_index, high, setupShortLabel, style=label.style_label_down, color=color.red,   textcolor=color.white, size=size.tiny)
+plot(longSignal  ? longSl  : na, color=color.new(color.red,   0), style=plot.style_circles, linewidth=2)
+plot(longSignal  ? longTp  : na, color=color.new(color.green, 0), style=plot.style_circles, linewidth=2)
+plot(shortSignal ? shortSl : na, color=color.new(color.red,   0), style=plot.style_circles, linewidth=2)
+plot(shortSignal ? shortTp : na, color=color.new(color.green, 0), style=plot.style_circles, linewidth=2)
+
+alertcondition(longSignal,  "Long Signal",  message="long")
+alertcondition(shortSignal, "Short Signal", message="short")
+
+if longSignal
+    msgL = '{"symbol":"' + syminfo.ticker + '","action":"buy","setup":"' + setupLongLabel + '","price":' + str.tostring(close) + ',"sl":' + str.tostring(math.round(longSl, 2)) + ',"tp":' + str.tostring(math.round(longTp, 2)) + '}'
+    alert(msgL, alert.freq_once_per_bar_close)
+
+if shortSignal
+    msgS = '{"symbol":"' + syminfo.ticker + '","action":"sell","setup":"' + setupShortLabel + '","price":' + str.tostring(close) + ',"sl":' + str.tostring(math.round(shortSl, 2)) + ',"tp":' + str.tostring(math.round(shortTp, 2)) + '}'
+    alert(msgS, alert.freq_once_per_bar_close)

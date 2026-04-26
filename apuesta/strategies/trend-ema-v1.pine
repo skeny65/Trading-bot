@@ -1,0 +1,39 @@
+//@version=5
+indicator("trend-ema-v1", overlay=true)
+
+emaFastLen  = input.int(20, "EMA Rápida (20)", minval=2)
+emaSlowLen  = input.int(50, "EMA Lenta (50)",  minval=5)
+rsiLen      = input.int(14, "RSI",             minval=2)
+rsiLongMin  = input.int(55, "RSI Long >", minval=50, maxval=80)
+rsiShortMax = input.int(45, "RSI Short <", minval=20, maxval=50)
+useAdx      = input.bool(true,  "Filtro ADX (fuerza tendencia)")
+adxLen      = input.int(14, "ADX len", minval=2)
+adxMin      = input.int(18, "ADX min", minval=0)
+useSession  = input.bool(false, "Sesión 13-22 UTC (off = 24/7)")
+
+emaF = ta.ema(close, emaFastLen)
+emaS = ta.ema(close, emaSlowLen)
+rsi  = ta.rsi(close, rsiLen)
+[diPlus, diMinus, adxVal] = ta.dmi(adxLen, adxLen)
+
+inSession = not useSession or (hour >= 13 and hour < 22)
+adxOk     = not useAdx or adxVal >= adxMin
+
+crossUp   = ta.crossover(emaF, emaS)
+crossDown = ta.crossunder(emaF, emaS)
+longSig   = crossUp   and rsi >  rsiLongMin  and adxOk and inSession
+shortSig  = crossDown and rsi <  rsiShortMax and adxOk and inSession
+
+plot(emaF, "EMA 20", color=color.yellow, linewidth=2)
+plot(emaS, "EMA 50", color=color.orange, linewidth=2)
+plotshape(longSig,  title="LONG TREND",  style=shape.triangleup,   location=location.belowbar, color=color.lime, size=size.normal, text="T-L")
+plotshape(shortSig, title="SHORT TREND", style=shape.triangledown, location=location.abovebar, color=color.red,  size=size.normal, text="T-S")
+
+symStr = syminfo.ticker
+longMsg  = '{"symbol":"' + symStr + '","action":"buy","setup":"TREND","price":'  + str.tostring(close, "#.########") + '}'
+shortMsg = '{"symbol":"' + symStr + '","action":"sell","setup":"TREND","price":' + str.tostring(close, "#.########") + '}'
+
+if longSig
+    alert(longMsg,  alert.freq_once_per_bar_close)
+if shortSig
+    alert(shortMsg, alert.freq_once_per_bar_close)

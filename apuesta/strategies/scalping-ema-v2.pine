@@ -1,0 +1,87 @@
+//@version=5
+indicator("scalping-ema-v2", overlay=true)
+
+// ============ INPUTS ============
+grpCore = "Núcleo"
+emaFastLen = input.int(9,  "EMA Rápida",  minval=2, group=grpCore)
+emaMidLen  = input.int(21, "EMA Media",   minval=3, group=grpCore)
+emaSlowLen = input.int(50, "EMA Lenta",   minval=10, group=grpCore)
+rsiLen     = input.int(14, "RSI",         minval=2, group=grpCore)
+volLen     = input.int(20, "Vol MA",      minval=5, group=grpCore)
+
+grpFilt = "Filtros"
+useEma50     = input.bool(true,  "Filtro EMA 50", group=grpFilt)
+useVol       = input.bool(true,  "Vol > MA",      group=grpFilt)
+volMult      = input.float(1.0,  "Vol mult", minval=0.3, step=0.1, group=grpFilt)
+useSession   = input.bool(false, "Sesión 13-22 UTC", group=grpFilt)
+rsiLongMin   = input.int(50, "RSI Long min", group=grpFilt)
+rsiLongMax   = input.int(70, "RSI Long max", group=grpFilt)
+rsiShortMin  = input.int(30, "RSI Short min", group=grpFilt)
+rsiShortMax  = input.int(50, "RSI Short max", group=grpFilt)
+
+grpRisk = "Risk"
+slPct = input.float(1.0, "SL %", minval=0.1, step=0.1, group=grpRisk) / 100.0
+tpPct = input.float(2.0, "TP %", minval=0.1, step=0.1, group=grpRisk) / 100.0
+cooldownBars = input.int(3, "Cooldown barras", minval=0, group=grpRisk)
+
+emaF = ta.ema(close, emaFastLen)
+emaM = ta.ema(close, emaMidLen)
+emaS = ta.ema(close, emaSlowLen)
+rsi  = ta.rsi(close, rsiLen)
+volMa = ta.sma(volume, volLen)
+
+inSession = not useSession or (hour >= 13 and hour < 22)
+volOk     = not useVol or volume > volMa * volMult
+ema50LongOk  = not useEma50 or close > emaS
+ema50ShortOk = not useEma50 or close < emaS
+
+crossUp   = ta.crossover(emaF, emaM)
+crossDown = ta.crossunder(emaF, emaM)
+rsiLongOk  = rsi >= rsiLongMin  and rsi <= rsiLongMax
+rsiShortOk = rsi >= rsiShortMin and rsi <= rsiShortMax
+
+baseLong  = crossUp   and ema50LongOk  and rsiLongOk  and volOk and inSession
+baseShort = crossDown and ema50ShortOk and rsiShortOk and volOk and inSession
+
+var int lastSigBar = na
+canFire = na(lastSigBar) or (bar_index - lastSigBar) >= cooldownBars
+longSig  = baseLong  and canFire
+shortSig = baseShort and canFire
+if longSig or shortSig
+    lastSigBar := bar_index
+
+var int posDir = 0
+if longSig
+    posDir := 1
+if shortSig
+    posDir := -1
+closeLong  = posDir == 1  and crossDown
+closeShort = posDir == -1 and crossUp
+if closeLong or closeShort
+    posDir := 0
+
+slLong  = close * (1 - slPct)
+tpLong  = close * (1 + tpPct)
+slShort = close * (1 + slPct)
+tpShort = close * (1 - tpPct)
+
+plot(emaF, "EMA 9",  color=color.yellow)
+plot(emaM, "EMA 21", color=color.orange)
+plot(emaS, "EMA 50", color=color.red)
+
+plotshape(longSig,   title="LONG",       style=shape.triangleup,   location=location.belowbar, color=color.lime,    size=size.small, text="L")
+plotshape(shortSig,  title="SHORT",      style=shape.triangledown, location=location.abovebar, color=color.red,     size=size.small, text="S")
+plotshape(closeLong, title="CLOSE LONG", style=shape.xcross,       location=location.abovebar, color=color.fuchsia, size=size.tiny,  text="X")
+plotshape(closeShort,title="CLOSE SHORT",style=shape.xcross,       location=location.belowbar, color=color.fuchsia, size=size.tiny,  text="X")
+
+symStr = syminfo.ticker
+longMsg   = '{"symbol":"' + symStr + '","action":"buy","setup":"SCALP","price":'  + str.tostring(close, "#.########") + ',"sl":' + str.tostring(slLong,  "#.########") + ',"tp":' + str.tostring(tpLong,  "#.########") + '}'
+shortMsg  = '{"symbol":"' + symStr + '","action":"sell","setup":"SCALP","price":' + str.tostring(close, "#.########") + ',"sl":' + str.tostring(slShort, "#.########") + ',"tp":' + str.tostring(tpShort, "#.########") + '}'
+closeMsg  = '{"symbol":"' + symStr + '","action":"close","setup":"EMA9_REV"}'
+
+if longSig
+    alert(longMsg,  alert.freq_once_per_bar_close)
+if shortSig
+    alert(shortMsg, alert.freq_once_per_bar_close)
+if closeLong or closeShort
+    alert(closeMsg, alert.freq_once_per_bar_close)

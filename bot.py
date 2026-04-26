@@ -32,6 +32,7 @@ from manager.daily_runner import DailyRunner
 from manager.learning_engine import LearningEngine
 from manager.hindsight_engine import HindsightEngine
 from dashboard.generate_dashboard import DashboardGenerator
+from apuesta.tradingview_bridge import TradingViewBridge
 from utils.logger import setup_logger
 from utils.state_validator import StateValidator
 from utils.telegram_notifier import TelegramNotifier
@@ -145,6 +146,7 @@ validator = StateValidator()
 trade_logger: Optional[TradeLogger] = None
 telegram: Optional[TelegramNotifier] = None
 github_poller: Optional[GitHubSignalPoller] = None
+tradingview_bridge: Optional[TradingViewBridge] = None
 
 def handle_exit(sig, frame):
     logger.info("Shutdown graceful iniciado...")
@@ -163,7 +165,7 @@ signal.signal(signal.SIGTERM, handle_exit)
 def init_components():
     """inicializa todos los componentes del sistema."""
     global bot_registry, signal_processor, order_router, trade_logger
-    global daily_runner, dashboard_generator, telegram, github_poller
+    global daily_runner, dashboard_generator, telegram, github_poller, tradingview_bridge
     
     logger.info("inicializando componentes del bot...")
     
@@ -189,6 +191,19 @@ def init_components():
         token=os.getenv("github_token"),
         repo_name="skeny65/Trading-bot"
     )
+
+    tradingview_bridge = TradingViewBridge(
+        order_router=order_router,
+        bot_registry=bot_registry,
+        trade_logger=trade_logger,
+        logger=logger,
+        notifier=telegram,
+        webhook_secret=os.getenv("TV_WEBHOOK_SECRET", os.getenv("WEBHOOK_SECRET", "")),
+        risk_usdt=float(os.getenv("APUESTA_RISK_USDT", "1")),
+        reward_usdt=float(os.getenv("APUESTA_REWARD_USDT", "1")),
+        cooldown_min=int(os.getenv("APUESTA_COOLDOWN_MIN", "5")),
+        max_daily_losses=int(os.getenv("APUESTA_MAX_DAILY_LOSSES", "10")),
+    )
     
     logger.info("componentes inicializados correctamente")
 
@@ -211,6 +226,18 @@ async def run_daily_analysis():
         logger.info(f"análisis diario completado. dashboard: {dashboard_path}")
     except Exception as e:
         logger.error(f"error en análisis diario: {e}", exc_info=True)
+
+
+def refresh_dashboard_after_event():
+    """
+    regenera dashboard usando el reporte más reciente para incluir operaciones/logs actuales.
+    """
+    if not dashboard_generator:
+        return
+    try:
+        dashboard_generator.generate("data/reports/latest.json")
+    except Exception as e:
+        logger.warning(f"no se pudo regenerar dashboard tras evento: {e}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -262,10 +289,6 @@ async def health_check():
 
 @app.post("/webhook")
 async def receive_webhook(request: Request, x_webhook_secret: Optional[str] = Header(None)):
-    expected_secret = os.getenv("WEBHOOK_SECRET")
-    if expected_secret and x_webhook_secret != expected_secret:
-        raise HTTPException(status_code=401, detail="unauthorized")
-
     raw_body = await request.body()
     if not raw_body:
         logger.warning("webhook rechazado: body vacío")
@@ -307,6 +330,27 @@ async def receive_webhook(request: Request, x_webhook_secret: Optional[str] = He
     if not isinstance(body, dict):
         raise HTTPException(status_code=422, detail="invalid payload")
 
+    # Entrada 2: TradingView (apuesta) via mismo webhook
+    if tradingview_bridge and tradingview_bridge.is_tradingview_payload(body):
+        provided_secret = (
+            x_webhook_secret
+            or request.query_params.get("secret")
+            or body.get("secret")
+        )
+        if not tradingview_bridge.is_secret_valid(provided_secret):
+            raise HTTPException(status_code=403, detail="invalid secret")
+
+        tv_response, status_code = await tradingview_bridge.handle_payload(body)
+        if status_code >= 400:
+            raise HTTPException(status_code=status_code, detail=tv_response.get("detail", "tradingview error"))
+        refresh_dashboard_after_event()
+        return tv_response
+
+    # Entrada 1: rutina Claude/GitHub (formato existente)
+    expected_secret = os.getenv("WEBHOOK_SECRET")
+    if expected_secret and x_webhook_secret != expected_secret:
+        raise HTTPException(status_code=401, detail="unauthorized")
+
     # Acepta envelope completo de rutina para monitoreo continuo
     # Formato esperado: {timestamp, signal, status, processed, reason?}
     if "status" in body and "signal" in body:
@@ -344,6 +388,7 @@ async def receive_webhook(request: Request, x_webhook_secret: Optional[str] = He
         processed = signal_processor.validate(signal)
         order_result = await order_router.place_order(processed)
         bot_registry.record_trade(signal.strategy_id, order_result)
+        refresh_dashboard_after_event()
 
         order_id = order_result.get("id", "closed") if isinstance(order_result, dict) else getattr(order_result, "id", "closed")
         return {"status": "executed", "order_id": order_id}
@@ -389,6 +434,48 @@ async def get_dashboard():
     if os.path.exists(dashboard_path):
         return FileResponse(dashboard_path)
     raise HTTPException(status_code=404, detail="dashboard no disponible")
+
+
+@app.get("/apuesta/health")
+async def apuesta_health():
+    if not tradingview_bridge:
+        raise HTTPException(status_code=503, detail="apuesta module not initialized")
+    return tradingview_bridge.get_health()
+
+
+@app.get("/apuesta/report")
+async def apuesta_report():
+    if not tradingview_bridge:
+        raise HTTPException(status_code=503, detail="apuesta module not initialized")
+    return FileResponse("data/apuesta/trades_report.csv") if os.path.exists("data/apuesta/trades_report.csv") else {"status": "empty", "detail": "sin operaciones"}
+
+
+@app.get("/apuesta/stats")
+async def apuesta_stats():
+    if not tradingview_bridge:
+        raise HTTPException(status_code=503, detail="apuesta module not initialized")
+    return tradingview_bridge.get_stats()
+
+
+@app.get("/apuesta/paper")
+async def apuesta_paper():
+    if not tradingview_bridge:
+        raise HTTPException(status_code=503, detail="apuesta module not initialized")
+    return FileResponse("data/apuesta/paper_resolved.csv") if os.path.exists("data/apuesta/paper_resolved.csv") else {"status": "empty", "detail": "sin paper resolved"}
+
+
+@app.get("/apuesta/paper_stats")
+async def apuesta_paper_stats():
+    if not tradingview_bridge:
+        raise HTTPException(status_code=503, detail="apuesta module not initialized")
+    return tradingview_bridge.get_paper_stats()
+
+
+@app.post("/apuesta/unpause")
+async def apuesta_unpause():
+    if not tradingview_bridge:
+        raise HTTPException(status_code=503, detail="apuesta module not initialized")
+    return tradingview_bridge.unpause()
 
 if __name__ == "__main__":
     uvicorn.run("bot:app", host="0.0.0.0", port=8000, reload=True)

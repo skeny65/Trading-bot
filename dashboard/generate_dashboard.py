@@ -1,5 +1,8 @@
 import json
 import os
+import csv
+import glob
+import html
 from datetime import datetime
 from typing import Dict, List, Any
 import pandas as pd
@@ -417,6 +420,132 @@ class DashboardGenerator:
             "month_drawdown_avg": avg(month_rows, "max_drawdown"),
             "history_traces": json.dumps([history_trace, dd_trace]),
         }
+
+    def _build_log_config_rows(self) -> str:
+        files = [
+            ("logs/bot.log", "técnico", "eventos generales del bot", "siempre"),
+            ("logs/apuesta/webhook_server.log", "técnico", "eventos webhook de TradingView", "siempre"),
+            ("logs/apuesta/trades_log.txt", "evento", "signal/skip/order/close/error", "por webhook TV"),
+            ("data/apuesta/trades_report.csv", "csv", "operaciones de TradingView (OPEN/WIN/LOSS)", "entry/close"),
+            ("data/apuesta/paper_signals.csv", "csv", "todas las alertas TV", "cada alerta"),
+            ("data/apuesta/paper_resolved.csv", "csv", "paper resuelto", "cuando se resuelve"),
+            ("data/trades/*.jsonl", "jsonl", "operaciones/rechazos de rutinas", "por webhook rutina/github"),
+        ]
+
+        rows = []
+        for path, ftype, desc, when in files:
+            exists = bool(glob.glob(path)) if "*" in path else os.path.exists(path)
+            badge = '<span class="status-badge status-active">OK</span>' if exists else '<span class="status-badge status-hold">PENDIENTE</span>'
+            rows.append(
+                f"<tr><td>{html.escape(path)}</td><td>{ftype}</td><td>{html.escape(desc)}</td><td>{html.escape(when)}</td><td>{badge}</td></tr>"
+            )
+        return "\n".join(rows)
+
+    def _build_operations_section(self) -> Dict:
+        ops = []
+
+        # TradingView ops (CSV)
+        tv_path = "data/apuesta/trades_report.csv"
+        if os.path.exists(tv_path):
+            with open(tv_path, "r", encoding="utf-8", newline="") as f:
+                for row in csv.DictReader(f):
+                    ts = row.get("close_time_utc") or row.get("open_time_utc") or ""
+                    ops.append({
+                        "ts": ts,
+                        "source": "tradingview",
+                        "symbol": row.get("symbol", ""),
+                        "setup": row.get("setup", ""),
+                        "side": row.get("side", ""),
+                        "qty": row.get("qty", ""),
+                        "entry": row.get("entry", ""),
+                        "close_price": row.get("close_price", ""),
+                        "pnl": row.get("pnl_usdt", ""),
+                        "outcome": (row.get("outcome") or "").upper() or "OPEN",
+                    })
+
+        # Routine/GitHub ops (JSONL)
+        trade_files = sorted(glob.glob("data/trades/*.jsonl"), reverse=True)
+        for path in trade_files[:15]:
+            with open(path, "r", encoding="utf-8") as f:
+                for line in f.readlines()[-80:]:
+                    try:
+                        rec = json.loads(line.strip())
+                    except Exception:
+                        continue
+
+                    if rec.get("_type") == "signal_rejected":
+                        out = "REJECTED"
+                        setup = "-"
+                        symbol = (rec.get("signal") or {}).get("signal", {}).get("symbol", "")
+                        side = "-"
+                        qty = "-"
+                    else:
+                        out = str(rec.get("status", "FILLED")).upper()
+                        setup = ((rec.get("original_signal") or {}).get("strategy_id") or rec.get("strategy_id") or "-")
+                        symbol = rec.get("symbol", "")
+                        side = str(rec.get("side", "")).upper()
+                        qty = rec.get("qty", "")
+
+                    ops.append({
+                        "ts": rec.get("_logged_at", ""),
+                        "source": str(rec.get("source", "routine")).lower(),
+                        "symbol": symbol,
+                        "setup": setup,
+                        "side": side,
+                        "qty": qty,
+                        "entry": rec.get("filled_avg_price", ""),
+                        "close_price": "",
+                        "pnl": rec.get("pnl", ""),
+                        "outcome": out,
+                    })
+
+        def parse_ts(v: str):
+            if not v:
+                return datetime.min
+            for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S"):
+                try:
+                    return datetime.strptime(v[:26], fmt)
+                except Exception:
+                    continue
+            return datetime.min
+
+        ops_sorted = sorted(ops, key=lambda x: parse_ts(x.get("ts", "")), reverse=True)[:40]
+
+        wins = sum(1 for o in ops_sorted if o["outcome"] == "WIN")
+        losses = sum(1 for o in ops_sorted if o["outcome"] == "LOSS")
+        open_ops = sum(1 for o in ops_sorted if o["outcome"] in {"OPEN", "NEW", "ACCEPTED"})
+
+        rows = []
+        for o in ops_sorted:
+            outcome = o.get("outcome", "")
+            cls = "status-hold"
+            if outcome in {"WIN", "FILLED"}:
+                cls = "status-active"
+            elif outcome in {"LOSS", "REJECTED", "ERROR"}:
+                cls = "status-paused"
+
+            rows.append(
+                "<tr>"
+                f"<td>{html.escape(str(o.get('ts', '')))}</td>"
+                f"<td>{html.escape(str(o.get('source', '')))}</td>"
+                f"<td><strong>{html.escape(str(o.get('symbol', '')))}</strong></td>"
+                f"<td>{html.escape(str(o.get('setup', '')))}</td>"
+                f"<td>{html.escape(str(o.get('side', '')))}</td>"
+                f"<td>{html.escape(str(o.get('qty', '')))}</td>"
+                f"<td>{html.escape(str(o.get('entry', '')))}</td>"
+                f"<td>{html.escape(str(o.get('close_price', '')))}</td>"
+                f"<td>{html.escape(str(o.get('pnl', '')))}</td>"
+                f"<td><span class=\"status-badge {cls}\">{html.escape(outcome)}</span></td>"
+                "</tr>"
+            )
+
+        return {
+            "ops_rows": "\n".join(rows) if rows else "<tr><td colspan='10' style='color:#888'>Sin operaciones aún</td></tr>",
+            "ops_total": str(len(ops_sorted)),
+            "ops_win": str(wins),
+            "ops_loss": str(losses),
+            "ops_open": str(open_ops),
+        }
     
     def _build_decision_rows(self, data: Dict) -> str:
         rows = []
@@ -434,6 +563,7 @@ class DashboardGenerator:
         data = self._load_data(report_path) if report_path else self._generate_demo_data()
         self._append_snapshot(data)
         history_summary = self._compute_history_summary()
+        operations_summary = self._build_operations_section()
         template = self._load_template()
         wr_val, dd_val = data["win_rate_avg"], data["max_drawdown"]
         status_badge = (
@@ -454,6 +584,12 @@ class DashboardGenerator:
             "{{week_drawdown_avg}}": str(history_summary["week_drawdown_avg"]),
             "{{month_drawdown_avg}}": str(history_summary["month_drawdown_avg"]),
             "{{history_traces}}": history_summary["history_traces"],
+            "{{log_config_rows}}": self._build_log_config_rows(),
+            "{{ops_rows}}": operations_summary["ops_rows"],
+            "{{ops_total}}": operations_summary["ops_total"],
+            "{{ops_win}}": operations_summary["ops_win"],
+            "{{ops_loss}}": operations_summary["ops_loss"],
+            "{{ops_open}}": operations_summary["ops_open"],
         }
         html = template
         for placeholder, value in replacements.items(): html = html.replace(placeholder, value)

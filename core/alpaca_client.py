@@ -53,13 +53,24 @@ class AlpacaClient:
         if not self.live_api:
             raise RuntimeError("live_api no inicializada")
 
-        order = self.live_api.submit_order(
-            symbol=order_request.get("symbol"),
-            qty=order_request.get("qty"),
-            side=order_request.get("side"),
-            type=order_request.get("type", "market"),
-            time_in_force=order_request.get("time_in_force", "day"),
-        )
+        submit_kwargs = {
+            "symbol": order_request.get("symbol"),
+            "qty": order_request.get("qty"),
+            "side": order_request.get("side"),
+            "type": order_request.get("type", "market"),
+            "time_in_force": order_request.get("time_in_force", "day"),
+        }
+
+        if submit_kwargs["type"] == "limit" and order_request.get("limit_price") is not None:
+            submit_kwargs["limit_price"] = order_request.get("limit_price")
+
+        if order_request.get("stop_loss"):
+            submit_kwargs["stop_loss"] = order_request.get("stop_loss")
+
+        if order_request.get("take_profit"):
+            submit_kwargs["take_profit"] = order_request.get("take_profit")
+
+        order = self.live_api.submit_order(**submit_kwargs)
 
         # Estandarizar salida para que OrderRouter/BotRegistry mantengan el mismo contrato
         return {
@@ -90,6 +101,38 @@ class AlpacaClient:
         except Exception as e:
             print(f"Error crítico enviando orden: {e}")
             raise
+
+    def close_position(self, symbol: str) -> Dict:
+        """
+        cierra una posición abierta por símbolo.
+        """
+        if self.dry_run:
+            simulated_response = {
+                "id": f"dry_close_{random.randint(100000, 999999)}",
+                "symbol": symbol,
+                "status": "closed",
+                "mode": "dry_run",
+                "closed_at": datetime.now().isoformat(),
+            }
+            if self.logger:
+                self.logger.log_order(
+                    {"symbol": symbol, "action": "close_position"},
+                    simulated_response,
+                )
+            return simulated_response
+
+        if not self.live_api:
+            raise RuntimeError("live_api no inicializada")
+
+        closed = self.live_api.close_position(symbol)
+        return {
+            "id": getattr(closed, "id", None),
+            "symbol": symbol,
+            "status": "closed",
+            "mode": "live",
+            "closed_at": datetime.now().isoformat(),
+            "raw": getattr(closed, "_raw", {}),
+        }
     
     def cancel_all_orders(self, bot_id: str = None) -> Dict:
         """

@@ -1,0 +1,111 @@
+//@version=5
+indicator("apuesta-estrategia-v2", overlay=true, max_labels_count=500)
+
+// APUESTA-ESTRATEGIA-v2 (DEFINITIVA)
+// EMA9/21 + VWAP + Bollinger Bands + RSI
+// 5 setups: A(pullback) B(breakout) C(BB mean-rev) D(continuation) E(VWAP bounce)
+// Sesion 13-22 UTC. Modelo $3 R:R 1:1.
+
+emaFastLen   = input.int(9,  "EMA Fast")
+emaSlowLen   = input.int(21, "EMA Slow")
+rsiLen       = input.int(14, "RSI Length")
+rsiLongMin   = input.float(30, "RSI Long Min")
+rsiLongMax   = input.float(75, "RSI Long Max")
+rsiShortMin  = input.float(25, "RSI Short Min")
+rsiShortMax  = input.float(70, "RSI Short Max")
+rsiOversold  = input.float(30, "RSI oversold")
+rsiOverbought= input.float(70, "RSI overbought")
+bbLen        = input.int(20, "BB Length")
+bbMult       = input.float(2.0, "BB Mult")
+atrLen       = input.int(14, "ATR Length")
+atrMinPct    = input.float(0.06, "ATR Min %")
+slAtrMult    = input.float(2.0, "SL ATR Mult")
+tpAtrMult    = input.float(2.0, "TP ATR Mult")
+sessionOnly  = input.bool(true,  "Solo London+US")
+hourStart    = input.int(13, "Hora inicio UTC")
+hourEnd      = input.int(22, "Hora fin UTC")
+
+hUTC = hour(time, "UTC")
+inSession = not sessionOnly or (hUTC >= hourStart and hUTC < hourEnd)
+
+emaFast = ta.ema(close, emaFastLen)
+emaSlow = ta.ema(close, emaSlowLen)
+rsiVal  = ta.rsi(close, rsiLen)
+atrVal  = ta.atr(atrLen)
+vwapVal = ta.vwap
+bbBasis = ta.sma(close, bbLen)
+bbDev   = bbMult * ta.stdev(close, bbLen)
+bbUpper = bbBasis + bbDev
+bbLower = bbBasis - bbDev
+
+trendUp   = emaFast > emaSlow and close > emaSlow
+trendDown = emaFast < emaSlow and close < emaSlow
+aboveVwap = close > vwapVal
+belowVwap = close < vwapVal
+rsiOkLong  = rsiVal > rsiLongMin  and rsiVal < rsiLongMax
+rsiOkShort = rsiVal > rsiShortMin and rsiVal < rsiShortMax
+atrOk = atrVal / close * 100 > atrMinPct
+
+bodySize = math.abs(close - open)
+rng      = high - low
+bodyUp   = close > open
+bodyDown = close < open
+bullishCandle = bodyUp   and bodySize > rng * 0.30
+bearishCandle = bodyDown and bodySize > rng * 0.30
+
+nearEmaSlowLong  = low  <= emaSlow and close > emaSlow
+nearEmaSlowShort = high >= emaSlow and close < emaSlow
+longA  = trendUp   and nearEmaSlowLong  and bullishCandle and rsiOkLong  and atrOk and aboveVwap and inSession
+shortA = trendDown and nearEmaSlowShort and bearishCandle and rsiOkShort and atrOk and belowVwap and inSession
+
+longB  = trendUp   and close > high[1] and bullishCandle and rsiOkLong  and atrOk and aboveVwap and inSession
+shortB = trendDown and close < low[1]  and bearishCandle and rsiOkShort and atrOk and belowVwap and inSession
+
+longC  = (low <= bbLower)  and rsiVal < rsiOversold   and bullishCandle and atrOk and inSession
+shortC = (high >= bbUpper) and rsiVal > rsiOverbought and bearishCandle and atrOk and inSession
+
+twoBullish = bodyUp   and close[1] > open[1]
+twoBearish = bodyDown and close[1] < open[1]
+longD  = trendUp   and twoBullish and close > close[1] and rsiOkLong  and atrOk and aboveVwap and inSession
+shortD = trendDown and twoBearish and close < close[1] and rsiOkShort and atrOk and belowVwap and inSession
+
+longE  = (low  <= vwapVal and close > vwapVal) and bullishCandle and rsiOkLong  and atrOk and emaFast > emaSlow and inSession
+shortE = (high >= vwapVal and close < vwapVal) and bearishCandle and rsiOkShort and atrOk and emaFast < emaSlow and inSession
+
+longSignal  = longA or longB or longC or longD or longE
+shortSignal = shortA or shortB or shortC or shortD or shortE
+setupLongLabel  = longA ? "A" : longB ? "B" : longC ? "C" : longD ? "D" : longE ? "E" : ""
+setupShortLabel = shortA ? "A" : shortB ? "B" : shortC ? "C" : shortD ? "D" : shortE ? "E" : ""
+
+longSl  = close - slAtrMult * atrVal
+longTp  = close + tpAtrMult * atrVal
+shortSl = close + slAtrMult * atrVal
+shortTp = close - tpAtrMult * atrVal
+
+plot(emaFast, color=color.yellow, linewidth=1)
+plot(emaSlow, color=color.orange, linewidth=2)
+plot(vwapVal, color=color.fuchsia, linewidth=2)
+plot(bbUpper, color=color.new(color.gray, 50))
+plot(bbLower, color=color.new(color.gray, 50))
+bgcolor(inSession ? color.new(color.green, 93) : na)
+plotshape(longSignal,  location=location.belowbar, style=shape.triangleup,   color=color.green, size=size.small, text="L")
+plotshape(shortSignal, location=location.abovebar, style=shape.triangledown, color=color.red,   size=size.small, text="S")
+if longSignal
+    label.new(bar_index, low,  setupLongLabel,  style=label.style_label_up,   color=color.green, textcolor=color.white, size=size.tiny)
+if shortSignal
+    label.new(bar_index, high, setupShortLabel, style=label.style_label_down, color=color.red,   textcolor=color.white, size=size.tiny)
+plot(longSignal  ? longSl  : na, color=color.new(color.red,   0), style=plot.style_circles, linewidth=2)
+plot(longSignal  ? longTp  : na, color=color.new(color.green, 0), style=plot.style_circles, linewidth=2)
+plot(shortSignal ? shortSl : na, color=color.new(color.red,   0), style=plot.style_circles, linewidth=2)
+plot(shortSignal ? shortTp : na, color=color.new(color.green, 0), style=plot.style_circles, linewidth=2)
+
+alertcondition(longSignal,  "Long Signal",  message="long")
+alertcondition(shortSignal, "Short Signal", message="short")
+
+if longSignal
+    msgL = '{"symbol":"' + syminfo.ticker + '","action":"buy","setup":"' + setupLongLabel + '","price":' + str.tostring(close) + ',"sl":' + str.tostring(math.round(longSl, 2)) + ',"tp":' + str.tostring(math.round(longTp, 2)) + '}'
+    alert(msgL, alert.freq_once_per_bar_close)
+
+if shortSignal
+    msgS = '{"symbol":"' + syminfo.ticker + '","action":"sell","setup":"' + setupShortLabel + '","price":' + str.tostring(close) + ',"sl":' + str.tostring(math.round(shortSl, 2)) + ',"tp":' + str.tostring(math.round(shortTp, 2)) + '}'
+    alert(msgS, alert.freq_once_per_bar_close)

@@ -1,0 +1,137 @@
+//@version=5
+indicator("Strategy-v1-BTC", overlay=true, max_labels_count=500)
+
+// === INPUTS ===
+emaTrendLen    = input.int(50, "EMA Trend (1H)")
+emaPullbackLen = input.int(20, "EMA Pullback")
+rsiLen         = input.int(14, "RSI Length")
+rsiLongMin     = input.float(25, "RSI Long Min")
+rsiLongMax     = input.float(55, "RSI Long Max")
+rsiShortMin    = input.float(45, "RSI Short Min")
+rsiShortMax    = input.float(75, "RSI Short Max")
+volMult        = input.float(1.2, "Volume Multiplier")
+volAvgLen      = input.int(20, "Volume Avg Length")
+atrLen         = input.int(14, "ATR Length")
+slAtrMult      = input.float(1.5, "SL ATR Mult")
+tpAtrMult      = input.float(3.0, "TP ATR Mult")
+pivotLookback  = input.int(20, "Pivot Lookback")
+srTolerance    = input.float(0.3, "S/R Tolerance %")
+
+// === TREND FILTER ===
+ema50_1H = request.security(syminfo.tickerid, "60", ta.ema(close, emaTrendLen))
+trendUp   = close > ema50_1H
+trendDown = close < ema50_1H
+
+// === INDICATORS ===
+ema20    = ta.ema(close, emaPullbackLen)
+rsiVal   = ta.rsi(close, rsiLen)
+volAvg   = ta.sma(volume, volAvgLen)
+atrValue = ta.atr(atrLen)
+
+// === COMMON ===
+rsiOkLong  = rsiVal > rsiLongMin  and rsiVal < rsiLongMax  and rsiVal > rsiVal[1]
+rsiOkShort = rsiVal > rsiShortMin and rsiVal < rsiShortMax and rsiVal < rsiVal[1]
+volOk      = volume > volAvg * volMult
+
+// === CANDLE PATTERNS ===
+bodySize  = math.abs(close - open)
+rng       = high - low
+upperWick = high - math.max(close, open)
+lowerWick = math.min(close, open) - low
+
+hammer       = lowerWick > bodySize * 2 and upperWick < bodySize and close > open
+shootingStar = upperWick > bodySize * 2 and lowerWick < bodySize and close < open
+bullEngulf   = close > open and close[1] < open[1] and close >= open[1] and open <= close[1]
+bearEngulf   = close < open and close[1] > open[1] and close <= open[1] and open >= close[1]
+
+velaReversionAlcista    = hammer or bullEngulf
+velaReversionBajista    = shootingStar or bearEngulf
+velaContinuacionAlcista = close > open and close > (open + rng * 0.6)
+velaContinuacionBajista = close < open and close < (high - rng * 0.6)
+velaRechazoAlcista      = lowerWick > bodySize and close > open
+velaRechazoBajista      = upperWick > bodySize and close < open
+
+// === PIVOTS ===
+ph = ta.pivothigh(high, pivotLookback, pivotLookback)
+pl = ta.pivotlow(low,  pivotLookback, pivotLookback)
+var float lastPH = na
+var float lastPL = na
+if not na(ph)
+    lastPH := ph
+if not na(pl)
+    lastPL := pl
+
+// === SETUP A - S/R bounce ===
+nearSupport    = not na(lastPL) and low  <= lastPL * (1 + srTolerance/100) and low  >= lastPL * (1 - srTolerance/100)
+nearResistance = not na(lastPH) and high >= lastPH * (1 - srTolerance/100) and high <= lastPH * (1 + srTolerance/100)
+longA  = trendUp   and nearSupport    and velaReversionAlcista and rsiOkLong  and volOk
+shortA = trendDown and nearResistance and velaReversionBajista and rsiOkShort and volOk
+
+// === SETUP B - Pullback EMA20 ===
+nearEma20Long  = low  <= ema20 and close > ema20
+nearEma20Short = high >= ema20 and close < ema20
+longB  = trendUp   and nearEma20Long  and velaContinuacionAlcista and rsiOkLong  and volOk
+shortB = trendDown and nearEma20Short and velaContinuacionBajista and rsiOkShort and volOk
+
+// === SETUP C - Breakout retest ===
+var float brokenRes    = na
+var int   brokenResBar = na
+var float brokenSup    = na
+var int   brokenSupBar = na
+if not na(lastPH) and close > lastPH
+    brokenRes := lastPH
+    brokenResBar := bar_index
+if not na(lastPL) and close < lastPL
+    brokenSup := lastPL
+    brokenSupBar := bar_index
+
+breakoutUp   = not na(brokenResBar) and (bar_index - brokenResBar) <= 10
+breakoutDown = not na(brokenSupBar) and (bar_index - brokenSupBar) <= 10
+retestUp     = breakoutUp   and low  <= brokenRes * (1 + srTolerance/100) and close > brokenRes
+retestDn     = breakoutDown and high >= brokenSup * (1 - srTolerance/100) and close < brokenSup
+longC  = trendUp   and retestUp and velaRechazoAlcista and rsiOkLong  and volOk
+shortC = trendDown and retestDn and velaRechazoBajista and rsiOkShort and volOk
+
+// === SIGNALS ===
+longSignal  = longA  or longB  or longC
+shortSignal = shortA or shortB or shortC
+
+setupLongLabel  = longA  ? "A" : longB  ? "B" : longC  ? "C" : ""
+setupShortLabel = shortA ? "A" : shortB ? "B" : shortC ? "C" : ""
+
+// === SL/TP ===
+longSl  = close - slAtrMult * atrValue
+longTp  = close + tpAtrMult * atrValue
+shortSl = close + slAtrMult * atrValue
+shortTp = close - tpAtrMult * atrValue
+
+// === PLOTS ===
+plot(ema50_1H, "EMA50 1H", color=color.orange, linewidth=2)
+plot(ema20,    "EMA20",    color=color.aqua)
+
+plotshape(longSignal,  title="Long",  location=location.belowbar, style=shape.triangleup,   color=color.green, size=size.small, text="L")
+plotshape(shortSignal, title="Short", location=location.abovebar, style=shape.triangledown, color=color.red,   size=size.small, text="S")
+
+if longSignal
+    label.new(bar_index, low,  setupLongLabel,  style=label.style_label_up,   color=color.green, textcolor=color.white, size=size.tiny)
+if shortSignal
+    label.new(bar_index, high, setupShortLabel, style=label.style_label_down, color=color.red,   textcolor=color.white, size=size.tiny)
+
+plot(longSignal  ? longSl  : na, "Long SL",  color=color.new(color.red,   0), style=plot.style_circles, linewidth=2)
+plot(longSignal  ? longTp  : na, "Long TP",  color=color.new(color.green, 0), style=plot.style_circles, linewidth=2)
+plot(shortSignal ? shortSl : na, "Short SL", color=color.new(color.red,   0), style=plot.style_circles, linewidth=2)
+plot(shortSignal ? shortTp : na, "Short TP", color=color.new(color.green, 0), style=plot.style_circles, linewidth=2)
+
+// === ALERTS ===
+// alertcondition() requiere const string, por eso usamos alert() para JSON dinámico.
+// Al crear la alerta en TV, elegir condición: "Any alert() function call".
+alertcondition(longSignal,  "Long Signal",  message="long")
+alertcondition(shortSignal, "Short Signal", message="short")
+
+if longSignal
+    msgL = '{"symbol":"' + syminfo.ticker + '","action":"buy","setup":"' + setupLongLabel + '","price":' + str.tostring(close) + ',"sl":' + str.tostring(math.round(longSl, 2)) + ',"tp":' + str.tostring(math.round(longTp, 2)) + '}'
+    alert(msgL, alert.freq_once_per_bar_close)
+
+if shortSignal
+    msgS = '{"symbol":"' + syminfo.ticker + '","action":"sell","setup":"' + setupShortLabel + '","price":' + str.tostring(close) + ',"sl":' + str.tostring(math.round(shortSl, 2)) + ',"tp":' + str.tostring(math.round(shortTp, 2)) + '}'
+    alert(msgS, alert.freq_once_per_bar_close)
