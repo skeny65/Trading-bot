@@ -478,5 +478,22 @@ async def apuesta_unpause():
         raise HTTPException(status_code=503, detail="apuesta module not initialized")
     return tradingview_bridge.unpause()
 
+
+@app.post("/apuesta/evaluate")
+async def apuesta_evaluate():
+    """Fuerza la evaluación WIN/LOSS de todas las posiciones abiertas contra precio de mercado."""
+    if not tradingview_bridge:
+        raise HTTPException(status_code=503, detail="apuesta module not initialized")
+    open_before = len(tradingview_bridge.active_positions)
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, tradingview_bridge._evaluate_outcomes)
+    open_after = len(tradingview_bridge.active_positions)
+    return {
+        "status": "ok",
+        "open_positions_before": open_before,
+        "resolved": open_before - open_after,
+        "open_positions_after": open_after,
+    }
+
 if __name__ == "__main__":
     uvicorn.run("bot:app", host="0.0.0.0", port=8000, reload=True)

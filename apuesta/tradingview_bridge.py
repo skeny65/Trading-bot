@@ -68,6 +68,46 @@ class TradingViewBridge:
         self.trades_report_csv = self.data_dir / "trades_report.csv"
 
         self._ensure_csv_headers()
+        self._reload_open_positions()
+        self._start_eval_scheduler()
+
+    def _reload_open_positions(self):
+        """Al arrancar, carga desde trades_report.csv las filas con outcome=OPEN
+        para que la evaluación WIN/LOSS funcione aunque el bot se haya reiniciado."""
+        rows = self._read_csv_rows(self.trades_report_csv)
+        reloaded = 0
+        for row in rows:
+            if str(row.get("outcome", "")).upper() != "OPEN":
+                continue
+            symbol = str(row.get("symbol", "")).strip()
+            if not symbol or symbol in self.active_positions:
+                continue
+            self.active_positions[symbol] = {
+                "open_time_utc": row.get("open_time_utc", ""),
+                "open_ts": time.time(),  # no tenemos el ts exacto; usamos ahora
+                "symbol": symbol,
+                "setup": row.get("setup", "TV"),
+                "side": str(row.get("side", "BUY")).upper(),
+                "entry": self._as_float(row.get("entry")),
+                "sl":    self._as_float(row.get("sl")),
+                "tp":    self._as_float(row.get("tp")),
+                "qty":   self._as_float(row.get("qty")),
+            }
+            reloaded += 1
+        if reloaded:
+            self.logger.info(f"APUESTA: {reloaded} posiciones OPEN recargadas desde CSV al arrancar")
+
+    def _start_eval_scheduler(self):
+        """Lanza un thread daemon que evalúa WIN/LOSS cada 5 minutos."""
+        def _loop():
+            while True:
+                time.sleep(300)  # 5 minutos
+                try:
+                    self._evaluate_outcomes()
+                except Exception as e:
+                    self.logger.debug(f"eval_scheduler error: {e}")
+        t = threading.Thread(target=_loop, daemon=True, name="apuesta_eval")
+        t.start()
 
     @staticmethod
     def is_tradingview_payload(payload: Dict) -> bool:
