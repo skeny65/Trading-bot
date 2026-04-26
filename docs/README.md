@@ -115,8 +115,7 @@ trading-bot/
 │   ├── start_trading_stack.bat    ← arranque completo en windows
 │   └── send_claude_signal.ps1     ← plan B para envío manual
 │
-├── docs/                     ← documentación completa
-└── tests/                    ← unit e integration tests
+└── docs/                     ← documentación completa + prompts de rutina
 ```
 
 ---
@@ -126,7 +125,7 @@ trading-bot/
 ### canal principal — claude routines (webhook)
 claude ai envía señales via HTTP POST a:
 ```
-https://shaft-goliath-shakable.ngrok-free.app/webhook
+https://shaft-goliath-shakable.ngrok-free.dev/webhook
 ```
 formato envelope: `{ "status": "pending", "signal": { ... } }`  
 ver [webhook_format.md](webhook_format.md) para detalles completos.

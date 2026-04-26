@@ -19,7 +19,7 @@
     {
       "id": "analyze_and_decide",
       "action": "analyze_with_claude",
-      "prompt_file": "strategy-prompts/daily_analysis.md",
+      "prompt_file": "docs/prompts/daily_analysis.md",
       "context_from_steps": ["read_strategies"],
       "output_variable": "signal_decision"
     },
