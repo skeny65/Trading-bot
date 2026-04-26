@@ -201,6 +201,7 @@ def init_components():
         webhook_secret=os.getenv("TV_WEBHOOK_SECRET", os.getenv("WEBHOOK_SECRET", "")),
         risk_usdt=float(os.getenv("APUESTA_RISK_USDT", "1")),
         reward_usdt=float(os.getenv("APUESTA_REWARD_USDT", "1")),
+        max_notional_usdt=float(os.getenv("APUESTA_MAX_NOTIONAL_USDT", "10")),
         cooldown_min=int(os.getenv("APUESTA_COOLDOWN_MIN", "5")),
         max_daily_losses=int(os.getenv("APUESTA_MAX_DAILY_LOSSES", "10")),
     )

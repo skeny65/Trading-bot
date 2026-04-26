@@ -28,6 +28,7 @@ class TradingViewBridge:
         webhook_secret: Optional[str] = None,
         risk_usdt: float = 1.0,
         reward_usdt: float = 1.0,
+        max_notional_usdt: float = 10.0,
         cooldown_min: int = 5,
         max_daily_losses: int = 10,
     ):
@@ -40,6 +41,7 @@ class TradingViewBridge:
         self.webhook_secret = webhook_secret or ""
         self.risk_usdt = float(risk_usdt)
         self.reward_usdt = float(reward_usdt)
+        self.max_notional_usdt = float(max_notional_usdt)
         self.cooldown_min = int(cooldown_min)
         self.max_daily_losses = int(max_daily_losses)
 
@@ -89,6 +91,7 @@ class TradingViewBridge:
             "day_utc": str(self.day),
             "risk_usdt": self.risk_usdt,
             "reward_usdt": self.reward_usdt,
+            "max_notional_usdt": self.max_notional_usdt,
             "cooldown_min": self.cooldown_min,
             "cooldown_seconds": cooldowns,
             "module": "apuesta/tradingview_bridge",
@@ -183,6 +186,19 @@ class TradingViewBridge:
     async def _handle_entry(self, payload: Dict, symbol: str, action: str, setup: str) -> Tuple[Dict, int]:
         strategy_id = self._strategy_id_for_setup(setup)
 
+        # Alpaca crypto paper no permite abrir cortos. Si llega "sell" sin posición,
+        # se rechaza de forma controlada (200) en vez de provocar error 500.
+        if action == "sell":
+            if self._has_open_position(symbol):
+                return await self._handle_close(symbol, setup)
+            self._register_paper_signal(payload, symbol, action, setup, executed=False, skip_reason="short_not_supported")
+            self._log_text("REJECTED", symbol, setup, "sell ignored: no open long position")
+            return {
+                "status": "rejected",
+                "source": "tradingview",
+                "reason": "sell sin posición abierta (short no soportado en este modo)",
+            }, 200
+
         entry = self._as_float(payload.get("price"))
         sl = self._as_float(payload.get("sl"))
         tp = self._as_float(payload.get("tp"))
@@ -251,17 +267,23 @@ class TradingViewBridge:
                 "mode": result.get("execution_mode"),
             }, 200
         except Exception as e:
-            self._register_paper_signal(payload, symbol, action, setup, executed=False, skip_reason=f"error:{str(e)[:80]}")
+            error_msg = str(e)
+            if "insufficient balance" in error_msg.lower():
+                self._register_paper_signal(payload, symbol, action, setup, executed=False, skip_reason="insufficient_balance")
+                self._log_text("REJECTED", symbol, setup, error_msg)
+                return {"status": "rejected", "source": "tradingview", "reason": error_msg}, 200
+
+            self._register_paper_signal(payload, symbol, action, setup, executed=False, skip_reason=f"error:{error_msg[:80]}")
             self._register_loss()
             if self.trade_logger:
                 self.trade_logger.log_signal_rejected(
                     {"source": "tradingview", "payload": payload},
-                    f"ERROR:{str(e)[:120]}"
+                    f"ERROR:{error_msg[:120]}"
                 )
             if self.notifier and getattr(self.notifier, "enabled", False):
-                await self.notifier.send_order_error(strategy_id, str(e), payload)
-            self._log_text("ERROR", symbol, setup, str(e))
-            return {"status": "error", "source": "tradingview", "detail": str(e)}, 500
+                await self.notifier.send_order_error(strategy_id, error_msg, payload)
+            self._log_text("ERROR", symbol, setup, error_msg)
+            return {"status": "error", "source": "tradingview", "detail": error_msg}, 500
 
     def _has_open_position(self, symbol: str) -> bool:
         positions_data = self.order_router.client.get_positions()
@@ -306,15 +328,22 @@ class TradingViewBridge:
                 self.paused = True
 
     def _calculate_qty(self, entry: Optional[float], sl: Optional[float], incoming_size) -> float:
+        qty = 0.0
+
         if entry and sl and abs(entry - sl) > 0:
             qty = self.risk_usdt / abs(entry - sl)
-            return max(round(qty, 6), 0.0001)
+        else:
+            try:
+                qty = float(incoming_size) if incoming_size is not None else 0.1
+            except (TypeError, ValueError):
+                qty = 0.1
 
-        try:
-            size = float(incoming_size) if incoming_size is not None else 0.1
-        except (TypeError, ValueError):
-            size = 0.1
-        return max(round(size, 6), 0.0001)
+        # Regla dura: nunca superar notional max_notional_usdt por operación.
+        if entry and entry > 0 and self.max_notional_usdt > 0:
+            max_qty_by_notional = self.max_notional_usdt / entry
+            qty = min(qty, max_qty_by_notional)
+
+        return max(round(qty, 6), 0.0001)
 
     def _recalculate_tp(
         self,
