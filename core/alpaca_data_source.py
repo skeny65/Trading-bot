@@ -20,6 +20,8 @@ def _build_api():
         api_key = os.getenv("ALPACA_API_KEY")
         secret_key = os.getenv("ALPACA_SECRET_KEY")
         base_url = os.getenv("ALPACA_BASE_URL", "https://paper-api.alpaca.markets/v2")
+        if base_url.endswith("/v2"):
+            base_url = base_url[:-3]
 
         if not api_key or not secret_key:
             logger.warning("AlpacaDataSource: credenciales no configuradas, modo simulado activo")

@@ -18,12 +18,63 @@ class AlpacaClient:
         self.dry_run = os.getenv("EXECUTE_ORDERS", "false").lower() != "true"
         self.logger = DryRunLogger() if self.dry_run else None
         self.simulated_balance = float(os.getenv("DRY_RUN_INITIAL_BALANCE", "100000"))
+        self.live_api = None
         
         if self.dry_run:
             print("alpaca client: modo dry run activo")
             print(f"balance simulado: ${self.simulated_balance:,.2f}")
         else:
             print("alpaca client: modo live trading - se enviarán órdenes reales")
+            self.live_api = self._build_live_api()
+
+    def _normalize_base_url(self, base_url: str) -> str:
+        # alpaca_trade_api.REST espera base URL sin sufijo /v2
+        if not base_url:
+            return "https://paper-api.alpaca.markets"
+        return base_url[:-3] if base_url.endswith("/v2") else base_url
+
+    def _build_live_api(self):
+        try:
+            import alpaca_trade_api as tradeapi
+
+            api_key = os.getenv("ALPACA_API_KEY")
+            secret_key = os.getenv("ALPACA_SECRET_KEY")
+            base_url = self._normalize_base_url(os.getenv("ALPACA_BASE_URL", "https://paper-api.alpaca.markets"))
+
+            if not api_key or not secret_key:
+                raise ValueError("ALPACA_API_KEY/ALPACA_SECRET_KEY no configuradas")
+
+            return tradeapi.REST(api_key, secret_key, base_url, api_version="v2")
+        except Exception as e:
+            print(f"Error inicializando Alpaca live API: {e}")
+            raise
+
+    def _place_order_live(self, order_request: Dict) -> Dict:
+        if not self.live_api:
+            raise RuntimeError("live_api no inicializada")
+
+        order = self.live_api.submit_order(
+            symbol=order_request.get("symbol"),
+            qty=order_request.get("qty"),
+            side=order_request.get("side"),
+            type=order_request.get("type", "market"),
+            time_in_force=order_request.get("time_in_force", "day"),
+        )
+
+        # Estandarizar salida para que OrderRouter/BotRegistry mantengan el mismo contrato
+        return {
+            "id": getattr(order, "id", None),
+            "client_order_id": getattr(order, "client_order_id", None),
+            "symbol": getattr(order, "symbol", order_request.get("symbol")),
+            "side": getattr(order, "side", order_request.get("side")),
+            "qty": str(getattr(order, "qty", order_request.get("qty"))),
+            "filled_qty": str(getattr(order, "filled_qty", 0)),
+            "filled_avg_price": str(getattr(order, "filled_avg_price", 0) or 0),
+            "status": getattr(order, "status", "accepted"),
+            "created_at": str(getattr(order, "created_at", datetime.now().isoformat())),
+            "filled_at": str(getattr(order, "filled_at", "")),
+            "mode": "live",
+        }
     
     def place_order(self, order_request: Dict) -> Dict:
         """
@@ -56,8 +107,22 @@ class AlpacaClient:
                 "bot_id": bot_id,
                 "timestamp": datetime.now().isoformat()
             }
-        
-        raise NotImplementedError("modo live trading requiere implementación")
+
+        if not self.live_api:
+            raise RuntimeError("live_api no inicializada")
+
+        open_orders = self.live_api.list_orders(status="open")
+        cancelled = []
+        for order in open_orders:
+            self.live_api.cancel_order(order.id)
+            cancelled.append(order.id)
+
+        return {
+            "status": "cancelled",
+            "cancelled_orders": cancelled,
+            "bot_id": bot_id,
+            "timestamp": datetime.now().isoformat(),
+        }
     
     def get_positions(self) -> Dict:
         """
@@ -70,8 +135,16 @@ class AlpacaClient:
                 "balance": self.simulated_balance,
                 "timestamp": datetime.now().isoformat()
             }
-        
-        raise NotImplementedError("modo live trading requiere implementación")
+
+        if not self.live_api:
+            raise RuntimeError("live_api no inicializada")
+
+        positions = self.live_api.list_positions()
+        return {
+            "status": "live",
+            "positions": [p._raw for p in positions],
+            "timestamp": datetime.now().isoformat(),
+        }
     
     def get_account(self) -> Dict:
         """
@@ -86,8 +159,19 @@ class AlpacaClient:
                 "buying_power": self.simulated_balance * 2,
                 "timestamp": datetime.now().isoformat()
             }
-        
-        raise NotImplementedError("modo live trading requiere implementación")
+
+        if not self.live_api:
+            raise RuntimeError("live_api no inicializada")
+
+        account = self.live_api.get_account()
+        return {
+            "status": "live",
+            "account_number": getattr(account, "account_number", None),
+            "cash": float(getattr(account, "cash", 0) or 0),
+            "portfolio_value": float(getattr(account, "portfolio_value", 0) or 0),
+            "buying_power": float(getattr(account, "buying_power", 0) or 0),
+            "timestamp": datetime.now().isoformat(),
+        }
     
     def _simulate_order(self, order_request: Dict) -> Dict:
         """

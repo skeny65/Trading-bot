@@ -4,6 +4,7 @@ setlocal
 rem Start full local stack for Trading-bot:
 rem 1) Uvicorn bot server
 rem 2) ngrok public tunnel
+rem 3) Claude JSON signal sender window
 
 set "ROOT=%~dp0.."
 pushd "%ROOT%"
@@ -27,6 +28,12 @@ if errorlevel 1 (
   exit /b 1
 )
 
+if not exist "scripts\send_claude_signal.ps1" (
+  echo [ERROR] scripts\send_claude_signal.ps1 not found.
+  popd
+  exit /b 1
+)
+
 set "NGROK_DOMAIN=shaft-goliath-shakable.ngrok-free.dev"
 if not "%~1"=="" set "NGROK_DOMAIN=%~1"
 
@@ -36,12 +43,14 @@ echo [INFO] ngrok domain: %NGROK_DOMAIN%
 
 start "Trading Bot (Uvicorn)" cmd /k "cd /d ""%ROOT%"" && call venv\Scripts\activate.bat && python -m uvicorn bot:app --host 0.0.0.0 --port 8000 --reload"
 start "ngrok Tunnel" cmd /k "cd /d ""%ROOT%"" && ngrok http --domain=%NGROK_DOMAIN% 8000"
+start "Signal Sender (Paste Claude JSON)" cmd /k "cd /d ""%ROOT%\scripts"" && powershell -NoProfile -ExecutionPolicy Bypass -File .\send_claude_signal.ps1"
 
-echo [OK] Two windows launched:
+echo [OK] Three windows launched:
 echo      - Trading Bot ^(Uvicorn^)
 echo      - ngrok Tunnel
+echo      - Signal Sender ^(paste JSON from Claude + END^)
 echo.
-echo Keep both windows open while Claude Routine is running.
+echo Keep bot and ngrok windows open while Claude Routine is running.
 
 popd
 endlocal
