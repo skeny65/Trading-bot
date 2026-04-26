@@ -3,3 +3,18 @@
 [2026-04-26 16:00:07 UTC] | ORDER_PLACED | ETHUSD | B | qty=0.225225 mode=live
 [2026-04-26 16:04:38 UTC] | ERROR | BTCUSD | A | insufficient balance for USD (requested: 3161.72, available: 993.44)
 [2026-04-26 16:07:36 UTC] | ERROR | BTCUSD | A | insufficient balance for BTC (requested: 0.032873, available: 0)
+[2026-04-26 16:10:37 UTC] | ERROR | ETHUSD | E | insufficient balance for USD (requested: 1748.44, available: 993.44)
+[2026-04-26 16:11:31 UTC] | ERROR | ETHUSD | B | insufficient balance for USD (requested: 1800.95, available: 993.44)
+[2026-04-26 16:18:01 UTC] | REJECTED | BTCUSD | B | sell ignored: no open long position
+[2026-04-26 16:18:59 UTC] | ORDER_PLACED | BTCUSD | B | qty=0.000128 mode=live
+[2026-04-26 16:23:02 UTC] | CLOSE | BTCUSD | B | close_position
+[2026-04-26 16:25:03 UTC] | ORDER_PLACED | BTCUSD | B | qty=0.000128 mode=live
+[2026-04-26 16:26:00 UTC] | CLOSE | BTCUSD | B | close_position
+[2026-04-26 16:27:00 UTC] | ORDER_PLACED | BTCUSD | B | qty=0.000128 mode=live
+[2026-04-26 16:28:01 UTC] | CLOSE | BTCUSD | B | close_position
+[2026-04-26 16:30:03 UTC] | ORDER_PLACED | BTCUSD | B | qty=0.000128 mode=live
+[2026-04-26 16:30:59 UTC] | ORDER_PLACED | BTCUSD | F | qty=0.000128 mode=live
+[2026-04-26 16:34:02 UTC] | CLOSE | BTCUSD | D | close_position
+[2026-04-26 16:34:59 UTC] | IGNORED | BTCUSD | A | sell ignored: no open position to close
+[2026-04-26 16:36:01 UTC] | IGNORED | BTCUSD | A | sell ignored: no open position to close
+[2026-04-26 16:36:59 UTC] | IGNORED | BTCUSD | A | sell ignored: no open position to close
