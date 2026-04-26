@@ -18,3 +18,5 @@
 [2026-04-26 16:34:59 UTC] | IGNORED | BTCUSD | A | sell ignored: no open position to close
 [2026-04-26 16:36:01 UTC] | IGNORED | BTCUSD | A | sell ignored: no open position to close
 [2026-04-26 16:36:59 UTC] | IGNORED | BTCUSD | A | sell ignored: no open position to close
+[2026-04-26 16:41:01 UTC] | ORDER_PLACED | BTCUSD | B | qty=0.000128 mode=live
+[2026-04-26 16:41:59 UTC] | ORDER_PLACED | BTCUSD | F | qty=0.000128 mode=live

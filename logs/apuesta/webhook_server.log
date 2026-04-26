@@ -18,3 +18,5 @@
 2026-04-26 11:34:59,952 | IGNORED | symbol=BTCUSD | setup=A | detail=sell ignored: no open position to close
 2026-04-26 11:36:01,371 | IGNORED | symbol=BTCUSD | setup=A | detail=sell ignored: no open position to close
 2026-04-26 11:36:59,618 | IGNORED | symbol=BTCUSD | setup=A | detail=sell ignored: no open position to close
+2026-04-26 11:41:01,235 | ORDER_PLACED | symbol=BTCUSD | setup=B | detail=qty=0.000128 mode=live
+2026-04-26 11:41:59,735 | ORDER_PLACED | symbol=BTCUSD | setup=F | detail=qty=0.000128 mode=live
