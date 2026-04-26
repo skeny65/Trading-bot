@@ -64,12 +64,8 @@ class AlpacaClient:
         if submit_kwargs["type"] == "limit" and order_request.get("limit_price") is not None:
             submit_kwargs["limit_price"] = order_request.get("limit_price")
 
-        if order_request.get("stop_loss") or order_request.get("take_profit"):
-            submit_kwargs["order_class"] = "bracket"
-        if order_request.get("stop_loss"):
-            submit_kwargs["stop_loss"] = order_request.get("stop_loss")
-        if order_request.get("take_profit"):
-            submit_kwargs["take_profit"] = order_request.get("take_profit")
+        # Bracket orders no soportados para crypto en Alpaca.
+        # SL/TP se omiten intencionalmente; el cierre lo gestiona TradingView via alertas sell.
 
         order = self.live_api.submit_order(**submit_kwargs)
 

@@ -185,9 +185,11 @@ class TradingViewBridge:
 
     async def _handle_entry(self, payload: Dict, symbol: str, action: str, setup: str) -> Tuple[Dict, int]:
         strategy_id = self._strategy_id_for_setup(setup)
-        # Modo long-only: buy y sell se interpretan como señales de entrada.
-        # El cierre explícito ocurre solo con action == "close".
-        broker_side = "buy" if action == "sell" else action
+        # sell y close cierran la posición (TV envía sell cuando toca SL/TP).
+        # Alpaca crypto NO soporta bracket orders, así que el cierre lo gestiona TV via alertas.
+        if action == "sell":
+            return await self._handle_close(symbol, setup)
+        broker_side = action  # solo buy llega aquí
 
         entry = self._as_float(payload.get("price"))
         sl = self._as_float(payload.get("sl"))
@@ -206,12 +208,8 @@ class TradingViewBridge:
             "time_in_force": "gtc",
         }
 
-        # Bracket orders: SL y TP se envían a Alpaca para cierre automático.
-        # Con el tope de max_notional_usdt el riesgo real es ~$1, evitando insufficient balance.
-        if sl and sl > 0:
-            signal["stop_loss"] = {"stop_price": round(sl, 4)}
-        if tp_target and tp_target > 0:
-            signal["take_profit"] = {"limit_price": round(tp_target, 4)}
+        # Alpaca crypto NO soporta bracket orders (order_class=bracket).
+        # TradingView gestiona SL/TP enviando alertas sell cuando el precio los toca.
 
         try:
             result = await self.order_router.place_order(signal)
