@@ -1,0 +1,8 @@
+ts_utc,symbol,setup,side,entry,sl,tp,was_executed,skip_reason
+2026-04-26 15:40:01,ETHUSD,B,BUY,2345.77,2340.96,2346.97,Y,
+2026-04-26 15:45:00,ETHUSD,B,SELL,2344.4,2349.01,2343.25,N,cooldown
+2026-04-26 15:50:01,ETHUSD,B,SELL,2343.43,2348.07,2342.27,N,open_position
+2026-04-26 15:55:33,ETHUSD,B,BUY,2345.15,2340.65,2346.28,N,"error:insufficient balance for USD (requested: 532.01, available: 511.8)"
+2026-04-26 16:00:07,ETHUSD,B,BUY,2347.0,2342.56,2348.11,Y,
+2026-04-26 16:04:38,BTCUSD,A,BUY,78009.9,77984.71,78016.2,N,"error:insufficient balance for USD (requested: 3161.72, available: 993.44)"
+2026-04-26 16:07:36,BTCUSD,A,SELL,78024.8,78055.22,78017.19,N,"error:insufficient balance for BTC (requested: 0.032873, available: 0)"

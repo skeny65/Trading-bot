@@ -1,0 +1,3 @@
+open_time_utc,close_time_utc,duration_sec,symbol,setup,side,entry,sl,tp,qty,leverage,close_price,pnl_usdt,outcome,risk_usdt,margin_usdt,notional_usdt,order_id,mode
+2026-04-26 15:40:01,,,ETHUSD,B,BUY,2345.77,2340.96,2350.580004810005,0.2079,alpaca,,,OPEN,1.0,,,5fd5b1fe-f674-4bfb-8fa9-400f5a864f53,live
+2026-04-26 16:00:07,,,ETHUSD,B,BUY,2347.0,2342.56,2351.4400044400045,0.225225,alpaca,,,OPEN,1.0,,,3dbaf167-90af-425e-b743-0ee3f7693767,live

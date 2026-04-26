@@ -1,0 +1,5 @@
+2026-04-26 10:40:01,819 | ORDER_PLACED | symbol=ETHUSD | setup=B | detail=qty=0.2079 mode=live
+2026-04-26 10:55:33,627 | ERROR | symbol=ETHUSD | setup=B | detail=insufficient balance for USD (requested: 532.01, available: 511.8)
+2026-04-26 11:00:07,748 | ORDER_PLACED | symbol=ETHUSD | setup=B | detail=qty=0.225225 mode=live
+2026-04-26 11:04:38,529 | ERROR | symbol=BTCUSD | setup=A | detail=insufficient balance for USD (requested: 3161.72, available: 993.44)
+2026-04-26 11:07:36,842 | ERROR | symbol=BTCUSD | setup=A | detail=insufficient balance for BTC (requested: 0.032873, available: 0)
