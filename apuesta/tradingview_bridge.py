@@ -181,39 +181,7 @@ class TradingViewBridge:
         }, 200
 
     async def _handle_entry(self, payload: Dict, symbol: str, action: str, setup: str) -> Tuple[Dict, int]:
-        with self.state_lock:
-            if self.paused:
-                self._register_paper_signal(payload, symbol, action, setup, executed=False, skip_reason="bot_paused")
-                return {
-                    "status": "rejected",
-                    "source": "tradingview",
-                    "reason": "bot paused by daily loss cap",
-                }, 200
-
         strategy_id = self._strategy_id_for_setup(setup)
-        if self.bot_registry and self.bot_registry.is_paused(strategy_id):
-            self._register_paper_signal(payload, symbol, action, setup, executed=False, skip_reason="strategy_paused")
-            return {
-                "status": "rejected",
-                "source": "tradingview",
-                "reason": f"strategy {strategy_id} paused",
-            }, 200
-
-        if self._in_cooldown(symbol):
-            self._register_paper_signal(payload, symbol, action, setup, executed=False, skip_reason="cooldown")
-            return {
-                "status": "skipped",
-                "source": "tradingview",
-                "reason": "cooldown active",
-            }, 200
-
-        if self._has_open_position(symbol):
-            self._register_paper_signal(payload, symbol, action, setup, executed=False, skip_reason="open_position")
-            return {
-                "status": "skipped",
-                "source": "tradingview",
-                "reason": "open position detected",
-            }, 200
 
         entry = self._as_float(payload.get("price"))
         sl = self._as_float(payload.get("sl"))
