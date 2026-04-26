@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from client import alpaca_client
 import logging
 
@@ -40,3 +40,45 @@ class AlpacaDataSource:
         except Exception as e:
             logger.error(f"Error fetching bars for {symbol}: {e}")
             return None
+
+    def get_price_provider(self, strategy_id: str, start_date: str, days: int) -> list:
+        """
+        Returns a list of closing prices starting from start_date for the specified window.
+        Used by HindsightEngine.
+        """
+        # Map strategy to symbol (This should ideally come from a config)
+        symbol_map = {"strategy_001": "SPY", "strategy_002": "QQQ"}
+        symbol = symbol_map.get(strategy_id, "SPY")
+        
+        try:
+            start_dt = datetime.fromisoformat(start_date)
+            end_dt = start_dt + timedelta(days=days)
+            
+            # Alpaca API expects ISO format
+            bars = self.api.get_bars(
+                symbol, 
+                "1Day", 
+                start=start_dt.isoformat(), 
+                end=end_dt.isoformat()
+            ).df
+            
+            if bars.empty:
+                return []
+            return bars['close'].tolist()
+        except Exception as e:
+            logger.error(f"Hindsight Price Provider Error for {strategy_id}: {e}")
+            return []
+
+    def get_trade_provider(self, strategy_id: str, start_date: str, days: int) -> list:
+        """
+        Returns trades executed after the decision. 
+        (In this architecture, we return actual orders from history).
+        """
+        try:
+            after_dt = datetime.fromisoformat(start_date)
+            orders = self.api.list_orders(status='all', after=after_dt.isoformat())
+            # Filter for specific strategy symbol (simplified)
+            return [order._raw for order in orders if order.status == 'filled']
+        except Exception as e:
+            logger.error(f"Hindsight Trade Provider Error for {strategy_id}: {e}")
+            return []

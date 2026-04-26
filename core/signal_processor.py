@@ -5,10 +5,9 @@ class SignalProcessor:
     def validate(self, signal):
         # Basic validation logic
         if signal.confidence < 0.5:
-            raise ValueError("Signal confidence too low")
+            raise ValueError("confidence too low")
 
-        # Logic to determine quantity (sizing) based on account balance or params
-        # For now, we use a placeholder quantity
+        # Logic to determine quantity (sizing)
         quantity = signal.params.get("quantity", 1)
         
         return {

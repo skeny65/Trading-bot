@@ -4,16 +4,19 @@ class DecisionEngine:
         # Dummy data for demo
         return {"win_rate": 0.42, "drawdown": -0.22}
 
-    def get_verdict(self, strategy_id: str, metrics: dict, regime: str) -> str:
+    def get_verdict(self, strategy_id: str, metrics: dict, regime: str, hindsight=None, adaptation_score: float = 50.0) -> str:
         """
         Decides whether to PAUSE, HOLD, or REACTIVATE.
         """
-        # Logic: If drawdown < -20% and regime is volatile, PAUSE.
+        is_bear = "BEAR" in regime.upper()
+
         if metrics["drawdown"] < -0.20:
+            if hindsight and not is_bear:
+                should_override, reason = hindsight.should_override_pause(strategy_id, regime, adaptation_score)
+                if should_override:
+                    return "HOLD"
             return "PAUSE"
-        
-        # If win_rate > 50% and was paused, maybe REACTIVATE?
-        # This is where the 'Learning Override' from your plan lives.
+
         if metrics["win_rate"] > 0.50:
             return "REACTIVATE"
             
