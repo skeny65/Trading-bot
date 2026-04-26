@@ -191,12 +191,12 @@ class TradingViewBridge:
         if action == "sell":
             if self._has_open_position(symbol):
                 return await self._handle_close(symbol, setup)
-            self._register_paper_signal(payload, symbol, action, setup, executed=False, skip_reason="short_not_supported")
-            self._log_text("REJECTED", symbol, setup, "sell ignored: no open long position")
+            self._register_paper_signal(payload, symbol, action, setup, executed=False, skip_reason="no_open_position_for_sell")
+            self._log_text("IGNORED", symbol, setup, "sell ignored: no open position to close")
             return {
-                "status": "rejected",
+                "status": "ignored",
                 "source": "tradingview",
-                "reason": "sell sin posición abierta (short no soportado en este modo)",
+                "reason": "sell sin posición abierta: no hay nada que cerrar",
             }, 200
 
         entry = self._as_float(payload.get("price"))
