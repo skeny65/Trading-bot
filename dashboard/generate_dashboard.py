@@ -25,9 +25,40 @@ class DashboardGenerator:
         self.history_json_path = os.path.join(self.public_dir, "dashboard_history.json")
         self.latest_output_path = os.path.join(self.output_dir, "latest.html")
         self.public_index_path = os.path.join(self.public_dir, "index.html")
+        self.max_versioned_files = max(1, int(os.getenv("DASHBOARD_MAX_FILES", "20")))
 
         os.makedirs(self.output_dir, exist_ok=True)
         os.makedirs(self.history_dir, exist_ok=True)
+
+    def _cleanup_old_dashboards(self):
+        """
+        Mantiene solo los ultimos N dashboards versionados para evitar acumulacion.
+        N se configura con DASHBOARD_MAX_FILES (default=20).
+        """
+        try:
+            output_files = sorted(
+                glob.glob(os.path.join(self.output_dir, "dashboard_*.html")),
+                reverse=True,
+            )
+            history_files = sorted(
+                glob.glob(os.path.join(self.history_dir, "dashboard_*.html")),
+                reverse=True,
+            )
+
+            for path in output_files[self.max_versioned_files:]:
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
+
+            for path in history_files[self.max_versioned_files:]:
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
+        except Exception:
+            # Nunca romper la generacion del dashboard por limpieza.
+            pass
         
     def _load_template(self) -> str:
         with open(self.template_path, 'r', encoding='utf-8') as f:
@@ -656,6 +687,8 @@ class DashboardGenerator:
         for path in [versioned_output_path, self.latest_output_path, self.public_index_path, history_output_path]:
             with open(path, 'w', encoding='utf-8') as f:
                 f.write(html)
+
+        self._cleanup_old_dashboards()
 
         return self.latest_output_path
 

@@ -430,7 +430,9 @@ async def health_detailed():
     }
 
 @app.get("/dashboard")
-async def get_dashboard():
+async def get_dashboard(refresh: bool = False):
+    if refresh:
+        refresh_dashboard_after_event()
     dashboard_path = "dashboard/output/latest.html"
     if os.path.exists(dashboard_path):
         return FileResponse(dashboard_path)
