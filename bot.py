@@ -13,6 +13,7 @@ import asyncio
 import logging
 import time
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Dict, Optional
 from contextlib import asynccontextmanager
 
@@ -147,6 +148,7 @@ trade_logger: Optional[TradeLogger] = None
 telegram: Optional[TelegramNotifier] = None
 github_poller: Optional[GitHubSignalPoller] = None
 tradingview_bridge: Optional[TradingViewBridge] = None
+bot2_decisions_path = Path("data") / "bot2_decisions.jsonl"
 
 def handle_exit(sig, frame):
     logger.info("Shutdown graceful iniciado...")
@@ -172,6 +174,7 @@ def init_components():
     os.makedirs("data/reports", exist_ok=True)
     os.makedirs("dashboard/output", exist_ok=True)
     os.makedirs("logs", exist_ok=True)
+    bot2_decisions_path.parent.mkdir(parents=True, exist_ok=True)
     
     trade_logger = TradeLogger()
     # Notificador
@@ -288,8 +291,57 @@ app = FastAPI(title="trading bot manager", lifespan=lifespan)
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
-@app.post("/webhook")
-async def receive_webhook(request: Request, x_webhook_secret: Optional[str] = Header(None)):
+def _extract_signal_payload(body: Dict) -> Dict:
+    if "status" in body and "signal" in body:
+        return body.get("signal") or {}
+    return body
+
+
+def _get_signal_source(body: Dict, signal_payload: Dict, forced_source: Optional[str] = None) -> str:
+    if forced_source:
+        return forced_source.lower()
+
+    body_source = body.get("source")
+    if isinstance(body_source, str) and body_source.strip():
+        return body_source.strip().lower()
+
+    params = signal_payload.get("params") or {}
+    if isinstance(params, dict):
+        src = params.get("source")
+        if isinstance(src, str) and src.strip():
+            return src.strip().lower()
+
+    strategy_id = str(signal_payload.get("strategy_id", "")).strip().lower()
+    if strategy_id.startswith("bot2"):
+        return "bot2"
+
+    return "routine"
+
+
+def _is_allowed_bot2_host(request: Request) -> bool:
+    allowed_raw = os.getenv("BOT2_ALLOWED_HOSTS", "127.0.0.1,::1,localhost")
+    allowed_hosts = {h.strip().lower() for h in allowed_raw.split(",") if h.strip()}
+    client_host = (request.client.host if request.client else "").lower()
+    return client_host in allowed_hosts
+
+
+def _log_bot2_decision(status: str, payload: Dict, result: Optional[Dict] = None, reason: Optional[str] = None):
+    record = {
+        "timestamp": datetime.now().isoformat(),
+        "status": status,
+        "reason": reason,
+        "payload": payload,
+        "result": result or {},
+    }
+    with bot2_decisions_path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+
+async def _receive_webhook_impl(
+    request: Request,
+    x_webhook_secret: Optional[str] = None,
+    forced_source: Optional[str] = None,
+):
     raw_body = await request.body()
     if not raw_body:
         logger.warning("webhook rechazado: body vacío")
@@ -331,8 +383,8 @@ async def receive_webhook(request: Request, x_webhook_secret: Optional[str] = He
     if not isinstance(body, dict):
         raise HTTPException(status_code=422, detail="invalid payload")
 
-    # Entrada 2: TradingView (apuesta) via mismo webhook
-    if tradingview_bridge and tradingview_bridge.is_tradingview_payload(body):
+    # Entrada 2: TradingView (apuesta) via mismo webhook principal
+    if forced_source is None and tradingview_bridge and tradingview_bridge.is_tradingview_payload(body):
         provided_secret = (
             x_webhook_secret
             or request.query_params.get("secret")
@@ -347,10 +399,24 @@ async def receive_webhook(request: Request, x_webhook_secret: Optional[str] = He
         refresh_dashboard_after_event()
         return tv_response
 
-    # Entrada 1: rutina Claude/GitHub (formato existente)
-    expected_secret = os.getenv("WEBHOOK_SECRET")
-    if expected_secret and x_webhook_secret != expected_secret:
-        raise HTTPException(status_code=401, detail="unauthorized")
+    signal_payload = _extract_signal_payload(body)
+    source = _get_signal_source(body, signal_payload, forced_source)
+    is_bot2 = source == "bot2"
+
+    if is_bot2:
+        # Seguridad bot2: secreto dedicado + opcionalmente solo localhost.
+        expected_bot2_secret = os.getenv("BOT2_WEBHOOK_SECRET", os.getenv("WEBHOOK_SECRET", ""))
+        if expected_bot2_secret and x_webhook_secret != expected_bot2_secret:
+            raise HTTPException(status_code=401, detail="unauthorized bot2 webhook")
+
+        bot2_local_only = os.getenv("BOT2_LOCAL_ONLY", "true").lower() == "true"
+        if bot2_local_only and not _is_allowed_bot2_host(request):
+            raise HTTPException(status_code=403, detail="bot2 webhook only allowed from localhost")
+    else:
+        # Entrada 1: rutina Claude/GitHub (formato existente)
+        expected_secret = os.getenv("WEBHOOK_SECRET")
+        if expected_secret and x_webhook_secret != expected_secret:
+            raise HTTPException(status_code=401, detail="unauthorized")
 
     # Acepta envelope completo de rutina para monitoreo continuo
     # Formato esperado: {timestamp, signal, status, processed, reason?}
@@ -358,22 +424,19 @@ async def receive_webhook(request: Request, x_webhook_secret: Optional[str] = He
         status = str(body.get("status", "")).lower()
         if status != "pending":
             reason = body.get("reason", "no_signal")
-            logger.info(f"webhook monitor recibido: status={status}, reason={reason}")
+            logger.info(f"webhook monitor recibido: status={status}, source={source}, reason={reason}")
             if trade_logger:
                 trade_logger.log_signal_rejected(
-                    {"source": "routine", "payload": body},
+                    {"source": source, "payload": body},
                     f"NO_SIGNAL:{reason}"
                 )
+            if is_bot2:
+                _log_bot2_decision("received_no_signal", body, {"processed": True}, str(reason))
             return {
                 "status": "received_no_signal",
                 "processed": True,
                 "reason": reason
             }
-
-        signal_payload = body.get("signal") or {}
-    else:
-        # Compatibilidad hacia atrás: payload directo de señal
-        signal_payload = body
 
     try:
         signal = TradingSignal(**signal_payload)
@@ -381,6 +444,8 @@ async def receive_webhook(request: Request, x_webhook_secret: Optional[str] = He
         raise HTTPException(status_code=422, detail=f"invalid signal payload: {e}")
     
     if bot_registry and bot_registry.is_paused(signal.strategy_id):
+        if is_bot2:
+            _log_bot2_decision("rejected", body, {"status": "rejected", "reason": "bot is paused by manager"}, "PAUSED")
         if telegram and telegram.enabled:
             await telegram.send_signal_rejected(signal.dict(), "PAUSED")
         return {"status": "rejected", "reason": "bot is paused by manager"}
@@ -389,15 +454,29 @@ async def receive_webhook(request: Request, x_webhook_secret: Optional[str] = He
         processed = signal_processor.validate(signal)
         order_result = await order_router.place_order(processed)
         bot_registry.record_trade(signal.strategy_id, order_result)
+        if is_bot2:
+            _log_bot2_decision("executed", body, {"status": "executed", "order_id": order_result.get("id")})
         refresh_dashboard_after_event()
 
         order_id = order_result.get("id", "closed") if isinstance(order_result, dict) else getattr(order_result, "id", "closed")
         return {"status": "executed", "order_id": order_id}
     except Exception as e:
+        if is_bot2:
+            _log_bot2_decision("error", body, {"status": "error"}, str(e))
         if telegram and telegram.enabled:
             await telegram.send_order_error(signal.strategy_id, str(e), signal.dict())
         logger.error(f"error ejecutando orden: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/webhook")
+async def receive_webhook(request: Request, x_webhook_secret: Optional[str] = Header(None)):
+    return await _receive_webhook_impl(request, x_webhook_secret, forced_source=None)
+
+
+@app.post("/webhook/bot2")
+async def receive_webhook_bot2(request: Request, x_webhook_secret: Optional[str] = Header(None)):
+    return await _receive_webhook_impl(request, x_webhook_secret, forced_source="bot2")
 
 @app.get("/mode")
 async def get_execution_mode():

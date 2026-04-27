@@ -742,5 +742,41 @@
     "regime_name": "Unknown",
     "regime_confidence": 70.0,
     "adaptation_score_avg": 50.0
+  },
+  {
+    "timestamp": "2026-04-26T20:40:02.399698",
+    "date": "2026-04-26",
+    "bots_activos": 0,
+    "bots_pausados": 0,
+    "total_bots": 3,
+    "win_rate_avg": 47.5,
+    "max_drawdown": -14.1,
+    "regime_name": "Unknown",
+    "regime_confidence": 70.0,
+    "adaptation_score_avg": 50.0
+  },
+  {
+    "timestamp": "2026-04-26T21:53:00.919518",
+    "date": "2026-04-26",
+    "bots_activos": 0,
+    "bots_pausados": 0,
+    "total_bots": 3,
+    "win_rate_avg": 47.5,
+    "max_drawdown": -14.1,
+    "regime_name": "Unknown",
+    "regime_confidence": 70.0,
+    "adaptation_score_avg": 50.0
+  },
+  {
+    "timestamp": "2026-04-26T22:43:02.971406",
+    "date": "2026-04-26",
+    "bots_activos": 0,
+    "bots_pausados": 0,
+    "total_bots": 3,
+    "win_rate_avg": 47.5,
+    "max_drawdown": -14.1,
+    "regime_name": "Unknown",
+    "regime_confidence": 70.0,
+    "adaptation_score_avg": 50.0
   }
 ]

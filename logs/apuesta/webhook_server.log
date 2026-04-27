@@ -2,3 +2,6 @@
 2026-04-26 16:33:15,111 | SIM_LOSS | symbol=BTCUSD | setup=RG1 | detail=price=78081.3584 entry=78221.0 sl=78103.67 tp=86033.5 pnl=-0.0179
 2026-04-26 16:57:00,941 | ORDER_PLACED | symbol=ETHUSD | setup=RG2 | detail=qty=0.00423 mode=live
 2026-04-26 16:58:16,087 | SIM_LOSS | symbol=ETHUSD | setup=RG2 | detail=price=2355.572 entry=2364.22 sl=2357.13 tp=2600.6266193853426 pnl=-0.0366
+2026-04-26 20:40:02,324 | ORDER_PLACED | symbol=ETHUSD | setup=RG2 | detail=qty=0.004189 mode=live
+2026-04-26 21:53:00,885 | ORDER_PLACED | symbol=AVAXUSD | setup=TREND | detail=qty=1.04712 mode=live
+2026-04-26 22:43:02,943 | ORDER_PLACED | symbol=ETHUSD | setup=RG2 | detail=qty=0.004171 mode=live

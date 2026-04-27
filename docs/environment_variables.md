@@ -35,6 +35,32 @@ rotar periódicamente y actualizar en claude routines cuando se cambie.
 
 ---
 
+## integración local de bot2 (webhook localhost)
+
+| variable | default | descripción |
+|----------|---------|-------------|
+| `BOT2_WEBHOOK_SECRET` | `WEBHOOK_SECRET` | secreto dedicado para webhooks de bot2. si no se define, usa `WEBHOOK_SECRET` |
+| `BOT2_LOCAL_ONLY` | `true` | si `true`, solo acepta bot2 desde hosts locales |
+| `BOT2_ALLOWED_HOSTS` | `127.0.0.1,::1,localhost` | lista de hosts permitidos para bot2 (separados por coma) |
+
+ruta recomendada para bot2 local:
+```
+POST http://127.0.0.1:8000/webhook/bot2
+```
+
+headers requeridos para bot2:
+```
+Content-Type: application/json
+X-Webhook-Secret: <BOT2_WEBHOOK_SECRET>
+```
+
+logs de bot2 recibidos por bot1:
+```
+data/bot2_decisions.jsonl
+```
+
+---
+
 ## modo de ejecución
 
 | variable | default | descripción |
@@ -93,6 +119,9 @@ alpaca_base_url=https://paper-api.alpaca.markets/v2
 # SEGURIDAD
 # ========================================
 WEBHOOK_SECRET=cambia_esto_por_una_clave_segura_larga
+BOT2_WEBHOOK_SECRET=cambia_esto_por_otra_clave_para_bot2
+BOT2_LOCAL_ONLY=true
+BOT2_ALLOWED_HOSTS=127.0.0.1,::1,localhost
 
 # ========================================
 # SERVIDOR

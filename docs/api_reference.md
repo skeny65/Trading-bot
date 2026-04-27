@@ -13,6 +13,7 @@ base url: `http://localhost:8000` (local) o `https://shaft-goliath-shakable.ngro
 | GET | `/mode` | modo de ejecución actual (dry_run / live) |
 | GET | `/dashboard` | sirve el dashboard HTML interactivo |
 | POST | `/webhook` | recibe señales de trading desde claude |
+| POST | `/webhook/bot2` | recibe señales de bot2 local (localhost) |
 
 ---
 
@@ -91,6 +92,9 @@ el dashboard incluye:
 - auto-refresh cada 5 minutos
 
 para acceder: `http://localhost:8000/dashboard` o vía ngrok.
+
+para forzar regeneración al abrir:
+`http://localhost:8000/dashboard?refresh=true`
 
 ---
 
@@ -172,6 +176,46 @@ X-Webhook-Secret: <valor de WEBHOOK_SECRET en .env>
   "size": 0.1
 }
 ```
+
+---
+
+## `POST /webhook/bot2`
+
+endpoint dedicado para `bot2` corriendo en la misma máquina.
+
+**headers requeridos:**
+```
+Content-Type: application/json
+X-Webhook-Secret: <BOT2_WEBHOOK_SECRET>
+```
+
+**restricción de origen (por defecto):**
+- solo localhost (`127.0.0.1`, `::1`, `localhost`)
+- controlado por `BOT2_LOCAL_ONLY` y `BOT2_ALLOWED_HOSTS`
+
+payload recomendado (envelope):
+```json
+{
+  "timestamp": "2026-04-26T14:00:00Z",
+  "status": "pending",
+  "processed": false,
+  "signal": {
+    "strategy_id": "bot2_macro_research",
+    "symbol": "SPY",
+    "action": "buy",
+    "confidence": 0.8,
+    "size": 0.1,
+    "params": {
+      "source": "bot2",
+      "stop_loss": 0.02,
+      "take_profit": 0.04
+    }
+  }
+}
+```
+
+bot1 registra trazas de recepción/decisión en:
+`data/bot2_decisions.jsonl`
 
 ---
 
