@@ -454,8 +454,30 @@ async def _receive_webhook_impl(
         processed = signal_processor.validate(signal)
         order_result = await order_router.place_order(processed)
         bot_registry.record_trade(signal.strategy_id, order_result)
+
+        if trade_logger:
+            trade_logger.log_trade({
+                "source": source,
+                "event": "order_placed",
+                "strategy_id": signal.strategy_id,
+                "symbol": signal.symbol,
+                "side": signal.action,
+                "confidence": signal.confidence,
+                "qty": order_result.get("qty") if isinstance(order_result, dict) else None,
+                "filled_avg_price": order_result.get("filled_avg_price") if isinstance(order_result, dict) else None,
+                "status": order_result.get("status") if isinstance(order_result, dict) else None,
+                "id": order_result.get("id") if isinstance(order_result, dict) else None,
+                "original_signal": signal.dict(),
+            })
+
         if is_bot2:
             _log_bot2_decision("executed", body, {"status": "executed", "order_id": order_result.get("id")})
+
+        logger.info(
+            f"WEBHOOK_EXECUTED source={source} strategy={signal.strategy_id} "
+            f"symbol={signal.symbol} action={signal.action} order_id={order_result.get('id') if isinstance(order_result, dict) else 'n/a'}"
+        )
+
         refresh_dashboard_after_event()
 
         order_id = order_result.get("id", "closed") if isinstance(order_result, dict) else getattr(order_result, "id", "closed")
