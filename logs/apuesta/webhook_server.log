@@ -229,3 +229,43 @@
 2026-04-27 19:38:26,852 | ERROR | symbol=BNBUSD | setup=RG2 | detail=entry=626.71 sl=624.83 tp=689.382348959639 side=BUY qty=0.015956 | asset "BNBUSD" not found
 2026-04-27 19:38:58,400 | ORDER_PLACED | symbol=ETHUSD | setup=RG2 | detail=qty=0.004338 mode=live
 2026-04-27 19:38:58,753 | ORDER_PLACED | symbol=SOLUSD | setup=RG2 | detail=qty=0.117966 mode=live
+2026-04-27 19:46:15,707 | SIM_LOSS | symbol=BTCUSD | setup=RG1 | detail=price=77419.92 entry=78221.0 sl=78103.67 tp=86033.5 pnl=-0.1025
+2026-04-27 19:46:15,709 | SIM_LOSS | symbol=ETHUSD | setup=RG2 | detail=price=2309.0 entry=2364.22 sl=2357.13 tp=2600.6266193853426 pnl=-0.2336
+2026-04-27 19:46:15,711 | SIM_LOSS | symbol=AVAXUSD | setup=TREND | detail=price=9.23 entry=9.55 sl=9.41 tp=10.505000382000153 pnl=-0.3351
+2026-04-27 20:01:27,296 | REJECTED | symbol=XRPUSD | setup=RG2 | detail=entry=1.3976 sl=1.4 tp=1.2578399986694848 side=SELL qty=7.155123 | insufficient balance for XRP (requested: 7.155123, available: 0)
+2026-04-27 20:03:00,756 | SIM_REJECTED_LOSS | symbol=XRPUSD | setup=RG2 | detail=price=1.401 entry=1.3976 sl=1.4 tp=1.2578399986694848 pnl=-0.0243 (no ejecutada)
+2026-04-27 20:03:35,406 | ERROR | symbol=BNBUSD | setup=RG2 | detail=entry=626.66 sl=628.54 tp=563.9955057024689 side=SELL qty=0.015958 | asset "BNBUSD" not found
+2026-04-27 20:04:02,571 | REJECTED | symbol=SOLUSD | setup=RG2 | detail=entry=84.74 sl=84.99 tp=76.26599823740763 side=SELL qty=0.118008 | insufficient balance for SOL (requested: 0.118008, available: 0)
+2026-04-27 20:11:15,889 | SIM_LOSS | symbol=BTCUSD | setup=RG1 | detail=price=77323.1 entry=78221.0 sl=78103.67 tp=86033.5 pnl=-0.1149
+2026-04-27 20:11:15,891 | SIM_LOSS | symbol=ETHUSD | setup=RG2 | detail=price=2309.9 entry=2364.22 sl=2357.13 tp=2600.6266193853426 pnl=-0.2298
+2026-04-27 20:11:15,894 | SIM_LOSS | symbol=AVAXUSD | setup=TREND | detail=price=9.2774 entry=9.55 sl=9.41 tp=10.505000382000153 pnl=-0.2854
+2026-04-27 20:11:41,825 | REJECTED | symbol=AVAXUSD | setup=RG2 | detail=entry=9.24 sl=9.27 tp=8.315999929775995 side=SELL qty=1.082251 | insufficient balance for AVAX (requested: 1.082251, available: 0)
+2026-04-27 20:12:17,522 | SIM_REJECTED_LOSS | symbol=AVAXUSD | setup=RG2 | detail=price=9.2774 entry=9.24 sl=9.27 tp=8.315999929775995 pnl=-0.0405 (no ejecutada)
+2026-04-27 20:19:31,026 | REJECTED | symbol=XRPUSD | setup=RG2 | detail=entry=1.3981 sl=1.4 tp=1.2582899962027603 side=SELL qty=7.152564 | insufficient balance for XRP (requested: 7.152564, available: 0)
+2026-04-27 20:20:00,781 | SIM_REJECTED_LOSS | symbol=XRPUSD | setup=RG2 | detail=price=1.401 entry=1.3981 sl=1.4 tp=1.2582899962027603 pnl=-0.0207 (no ejecutada)
+2026-04-27 20:20:33,714 | REJECTED | symbol=ETHUSD | setup=RG2 | detail=entry=2304.6 sl=2311.51 tp=2074.132150265038 side=SELL qty=0.004339 | insufficient balance for ETH (requested: 0.004339, available: 0)
+2026-04-27 20:36:16,067 | REJECTED | symbol=ETHUSD | setup=RG2 | detail=entry=2304.6 sl=2311.51 tp=2074.132150265038 side=SELL qty=0.004339 | insufficient balance for ETH (requested: 0.004339, available: 0)
+2026-04-27 20:37:34,542 | BLOCKED | symbol=ETHUSD | setup=RG2 | detail=entry=2304.6 sl=2311.51 tp=2074.132150265038 side=SELL qty=0.004339 | no open position to sell for ETHUSD
+2026-04-27 20:37:34,872 | BLOCKED | symbol=BNBUSD | setup=RG2 | detail=entry=626.7 sl=624.8 tp=689.3684213824654 side=BUY qty=0.015957 | asset "BNBUSD" not found
+2026-04-27 20:37:38,990 | SIM_LOSS | symbol=BTCUSD | setup=RG1 | detail=price=77079.48 entry=78221.0 sl=78103.67 tp=86033.5 pnl=-0.1461
+2026-04-27 20:37:38,997 | SIM_LOSS | symbol=ETHUSD | setup=RG2 | detail=price=2303.06 entry=2364.22 sl=2357.13 tp=2600.6266193853426 pnl=-0.2587
+2026-04-27 20:37:39,005 | SIM_LOSS | symbol=AVAXUSD | setup=TREND | detail=price=9.2774 entry=9.55 sl=9.41 tp=10.505000382000153 pnl=-0.2854
+2026-04-27 20:39:58,624 | ORDER_PLACED | symbol=ETHUSD | setup=RG2 | detail=qty=0.004338 mode=live
+2026-04-27 20:47:24,125 | SIM_LOSS | symbol=BTCUSD | setup=RG1 | detail=price=77135.55 entry=78221.0 sl=78103.67 tp=86033.5 pnl=-0.1389
+2026-04-27 20:47:24,128 | SIM_LOSS | symbol=ETHUSD | setup=RG2 | detail=price=2303.0 entry=2364.22 sl=2357.13 tp=2600.6266193853426 pnl=-0.259
+2026-04-27 20:47:24,130 | SIM_LOSS | symbol=AVAXUSD | setup=TREND | detail=price=9.2774 entry=9.55 sl=9.41 tp=10.505000382000153 pnl=-0.2854
+2026-04-27 21:02:11,258 | BLOCKED | symbol=AVAXUSD | setup=RG2 | detail=entry=9.24 sl=9.27 tp=8.315999929775995 side=SELL qty=1.082251 | no open position to sell for AVAXUSD
+2026-04-27 21:02:16,331 | SIM_LOSS | symbol=BTCUSD | setup=RG1 | detail=price=77150.47 entry=78221.0 sl=78103.67 tp=86033.5 pnl=-0.137
+2026-04-27 21:02:16,333 | SIM_LOSS | symbol=ETHUSD | setup=RG2 | detail=price=2300.3 entry=2364.22 sl=2357.13 tp=2600.6266193853426 pnl=-0.2704
+2026-04-27 21:02:16,334 | SIM_LOSS | symbol=AVAXUSD | setup=TREND | detail=price=9.2774 entry=9.55 sl=9.41 tp=10.505000382000153 pnl=-0.2854
+2026-04-27 21:02:16,336 | SIM_REJECTED_LOSS | symbol=AVAXUSD | setup=RG2 | detail=price=9.2774 entry=9.24 sl=9.27 tp=8.315999929775995 pnl=-0.0405 (no ejecutada)
+2026-04-27 21:05:50,199 | ORDER_PLACED | symbol=AVAXUSD | setup=RG2 | detail=qty=1.079914 mode=live
+2026-04-27 21:19:00,114 | ORDER_PLACED | symbol=XRPUSD | setup=RG2 | detail=qty=7.150518 mode=live
+2026-04-27 21:25:00,929 | BLOCKED | symbol=BNBUSD | setup=RG2 | detail=entry=625.71 sl=627.59 tp=563.1396083093481 side=SELL qty=0.015982 | asset "BNBUSD" not found
+2026-04-27 21:25:31,906 | REJECTED | symbol=ETHUSD | setup=RG2 | detail=entry=2297.74 sl=2304.63 tp=2067.960588235294 side=SELL qty=0.004352 | insufficient balance for ETH (requested: 0.004352, available: 0.004327155)
+2026-04-27 21:26:59,896 | BLOCKED | symbol=BTCUSD | setup=RG2 | detail=entry=77058.18 sl=77289.35 tp=69365.8723076923 side=SELL qty=0.00013 | no open position to sell for BTCUSD
+2026-04-27 21:27:26,874 | REJECTED | symbol=AVAXUSD | setup=RG2 | detail=entry=9.24 sl=9.27 tp=8.315999929775995 side=SELL qty=1.082251 | insufficient balance for AVAX (requested: 1.082251, available: 1.077214215)
+2026-04-27 21:30:55,298 | SIM_LOSS | symbol=AVAXUSD | setup=RG2 | detail=price=9.224 entry=9.26 sl=9.23 tp=10.185999662936123 pnl=-0.0389
+2026-04-27 21:36:01,983 | SIM_LOSS | symbol=SOLUSD | setup=RG2 | detail=price=84.12 entry=84.77 sl=84.52 tp=93.2470188020277 pnl=-0.0767
+2026-04-27 22:05:00,951 | BLOCKED | symbol=BTCUSD | setup=RG2 | detail=entry=76812.41 sl=77042.85 tp=69120.10230769232 side=SELL qty=0.00013 | no open position to sell for BTCUSD
+2026-04-27 22:07:59,354 | BLOCKED | symbol=BNBUSD | setup=RG2 | detail=entry=623.79 sl=625.66 tp=561.4108595845549 side=SELL qty=0.016031 | asset "BNBUSD" not found
