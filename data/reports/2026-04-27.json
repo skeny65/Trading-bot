@@ -1,0 +1,372 @@
+{
+  "date": "2026-04-27",
+  "generated_at": "2026-04-27T10:00:09.223577",
+  "regime": "VOLATILE",
+  "decisions": [
+    {
+      "strategy_id": "strategy_001",
+      "verdict": "PAUSE",
+      "regime": "VOLATILE",
+      "metrics": {
+        "win_rate": 47.48049845489955,
+        "drawdown": -10.30265692384243
+      }
+    },
+    {
+      "strategy_id": "strategy_002",
+      "verdict": "PAUSE",
+      "regime": "VOLATILE",
+      "metrics": {
+        "win_rate": 52.66958213570037,
+        "drawdown": -19.5085331891759
+      }
+    },
+    {
+      "strategy_id": "strategy_003",
+      "verdict": "PAUSE",
+      "regime": "VOLATILE",
+      "metrics": {
+        "win_rate": 55.98609390427919,
+        "drawdown": -6.745438805124056
+      }
+    },
+    {
+      "strategy_id": "apuesta_b",
+      "verdict": "PAUSE",
+      "regime": "VOLATILE",
+      "metrics": {
+        "win_rate": 48.60499966789974,
+        "drawdown": -15.666207313697601
+      }
+    },
+    {
+      "strategy_id": "apuesta_f",
+      "verdict": "PAUSE",
+      "regime": "VOLATILE",
+      "metrics": {
+        "win_rate": 44.79402744900153,
+        "drawdown": -18.28375406502326
+      }
+    },
+    {
+      "strategy_id": "apuesta_d",
+      "verdict": "PAUSE",
+      "regime": "VOLATILE",
+      "metrics": {
+        "win_rate": 41.744572240095664,
+        "drawdown": -22.211151663117946
+      }
+    },
+    {
+      "strategy_id": "apuesta_a",
+      "verdict": "PAUSE",
+      "regime": "VOLATILE",
+      "metrics": {
+        "win_rate": 53.423721521185875,
+        "drawdown": -15.974580434053415
+      }
+    },
+    {
+      "strategy_id": "apuesta_e",
+      "verdict": "PAUSE",
+      "regime": "VOLATILE",
+      "metrics": {
+        "win_rate": 58.68072172139678,
+        "drawdown": -18.53373934558924
+      }
+    },
+    {
+      "strategy_id": "apuesta_rg1",
+      "verdict": "PAUSE",
+      "regime": "VOLATILE",
+      "metrics": {
+        "win_rate": 42.10133247210781,
+        "drawdown": -7.051853646481231
+      }
+    },
+    {
+      "strategy_id": "apuesta_rg2",
+      "verdict": "PAUSE",
+      "regime": "VOLATILE",
+      "metrics": {
+        "win_rate": 54.18717145862633,
+        "drawdown": -15.835079087205326
+      }
+    },
+    {
+      "strategy_id": "apuesta_trend",
+      "verdict": "PAUSE",
+      "regime": "VOLATILE",
+      "metrics": {
+        "win_rate": 49.084063062469674,
+        "drawdown": -22.71373090946246
+      }
+    },
+    {
+      "strategy_id": "apuesta_smc",
+      "verdict": "PAUSE",
+      "regime": "VOLATILE",
+      "metrics": {
+        "win_rate": 59.39235499508301,
+        "drawdown": -20.049168324764246
+      }
+    },
+    {
+      "strategy_id": "apuesta_eth_reversal_guard_v002",
+      "verdict": "PAUSE",
+      "regime": "VOLATILE",
+      "metrics": {
+        "win_rate": 54.2306459471633,
+        "drawdown": -10.880335290311105
+      }
+    }
+  ],
+  "bots": [
+    {
+      "strategy_id": "strategy_001",
+      "status": "PAUSE",
+      "reason": "verdict=PAUSE, regime=VOLATILE",
+      "metrics": {
+        "win_rate": 47.48049845489955,
+        "drawdown": -10.30265692384243
+      },
+      "last_trade": {
+        "order_id": "cec26330-ae80-420d-ac78-e5ad14a96957",
+        "symbol": "SPY",
+        "side": "buy",
+        "qty": "0.1",
+        "filled_avg_price": "0",
+        "status": "accepted",
+        "recorded_at": "2026-04-26T02:14:58.906757"
+      },
+      "updated_at": "2026-04-27T10:00:09.192056"
+    },
+    {
+      "strategy_id": "strategy_002",
+      "status": "PAUSE",
+      "reason": "verdict=PAUSE, regime=VOLATILE",
+      "metrics": {
+        "win_rate": 52.66958213570037,
+        "drawdown": -19.5085331891759
+      },
+      "last_trade": null,
+      "updated_at": "2026-04-27T10:00:09.194203"
+    },
+    {
+      "strategy_id": "strategy_003",
+      "status": "PAUSE",
+      "reason": "verdict=PAUSE, regime=VOLATILE",
+      "metrics": {
+        "win_rate": 55.98609390427919,
+        "drawdown": -6.745438805124056
+      },
+      "last_trade": {
+        "order_id": "dry_115230",
+        "symbol": "SPY",
+        "side": "buy",
+        "qty": "0.1",
+        "filled_avg_price": "58.62",
+        "status": "filled",
+        "recorded_at": "2026-04-25T23:17:24.161361"
+      },
+      "updated_at": "2026-04-27T10:00:09.196201"
+    },
+    {
+      "strategy_id": "apuesta_b",
+      "status": "PAUSE",
+      "reason": "verdict=PAUSE, regime=VOLATILE",
+      "metrics": {
+        "win_rate": 48.60499966789974,
+        "drawdown": -15.666207313697601
+      },
+      "last_trade": {
+        "order_id": "c9ba915b-8045-4517-83bc-5783dec47a8d",
+        "symbol": "BTC/USD",
+        "side": "sell",
+        "qty": "0.000128",
+        "filled_avg_price": "0",
+        "status": "pending_new",
+        "recorded_at": "2026-04-26T13:33:01.033383"
+      },
+      "updated_at": "2026-04-27T10:00:09.198196"
+    },
+    {
+      "strategy_id": "apuesta_f",
+      "status": "PAUSE",
+      "reason": "verdict=PAUSE, regime=VOLATILE",
+      "metrics": {
+        "win_rate": 44.79402744900153,
+        "drawdown": -18.28375406502326
+      },
+      "last_trade": {
+        "order_id": "69e1df86-4133-467d-9ff1-1ab992cd318a",
+        "symbol": "BTC/USD",
+        "side": "buy",
+        "qty": "0.000128",
+        "filled_avg_price": "0",
+        "status": "pending_new",
+        "recorded_at": "2026-04-26T11:41:59.731927"
+      },
+      "updated_at": "2026-04-27T10:00:09.201185"
+    },
+    {
+      "strategy_id": "apuesta_d",
+      "status": "PAUSE",
+      "reason": "verdict=PAUSE, regime=VOLATILE",
+      "metrics": {
+        "win_rate": 41.744572240095664,
+        "drawdown": -22.211151663117946
+      },
+      "last_trade": {
+        "order_id": "780342c0-6b37-4ca0-a03c-eb014a02bd18",
+        "symbol": "BTC/USD",
+        "side": "buy",
+        "qty": "0.000128",
+        "filled_avg_price": "0",
+        "status": "pending_new",
+        "recorded_at": "2026-04-26T14:26:29.981214"
+      },
+      "updated_at": "2026-04-27T10:00:09.204179"
+    },
+    {
+      "strategy_id": "apuesta_a",
+      "status": "PAUSE",
+      "reason": "verdict=PAUSE, regime=VOLATILE",
+      "metrics": {
+        "win_rate": 53.423721521185875,
+        "drawdown": -15.974580434053415
+      },
+      "last_trade": {
+        "order_id": "32561d0e-ce59-4bf8-be68-43c227cb761e",
+        "symbol": "BTC/USD",
+        "side": "buy",
+        "qty": "0.000128",
+        "filled_avg_price": "0",
+        "status": "pending_new",
+        "recorded_at": "2026-04-26T14:27:02.636385"
+      },
+      "updated_at": "2026-04-27T10:00:09.207170"
+    },
+    {
+      "strategy_id": "apuesta_e",
+      "status": "PAUSE",
+      "reason": "verdict=PAUSE, regime=VOLATILE",
+      "metrics": {
+        "win_rate": 58.68072172139678,
+        "drawdown": -18.53373934558924
+      },
+      "last_trade": {
+        "order_id": "4a0fa566-514c-43a6-a9fc-0fc86bf9fb22",
+        "symbol": "BTC/USD",
+        "side": "buy",
+        "qty": "0.000128",
+        "filled_avg_price": "0",
+        "status": "pending_new",
+        "recorded_at": "2026-04-26T14:30:02.063462"
+      },
+      "updated_at": "2026-04-27T10:00:09.210300"
+    },
+    {
+      "strategy_id": "apuesta_rg1",
+      "status": "PAUSE",
+      "reason": "verdict=PAUSE, regime=VOLATILE",
+      "metrics": {
+        "win_rate": 42.10133247210781,
+        "drawdown": -7.051853646481231
+      },
+      "last_trade": {
+        "order_id": "2de82645-2e30-418a-b13a-535e717d4682",
+        "symbol": "BTC/USD",
+        "side": "buy",
+        "qty": "0.000128",
+        "filled_avg_price": "0",
+        "status": "pending_new",
+        "recorded_at": "2026-04-26T14:50:01.002639"
+      },
+      "updated_at": "2026-04-27T10:00:09.213293"
+    },
+    {
+      "strategy_id": "apuesta_rg2",
+      "status": "PAUSE",
+      "reason": "verdict=PAUSE, regime=VOLATILE",
+      "metrics": {
+        "win_rate": 54.18717145862633,
+        "drawdown": -15.835079087205326
+      },
+      "last_trade": {
+        "order_id": "d280cf13-4b16-4491-b26e-55dd9503ca58",
+        "symbol": "AVAX/USD",
+        "side": "buy",
+        "qty": "1.05042",
+        "filled_avg_price": "0",
+        "status": "pending_new",
+        "recorded_at": "2026-04-26T23:32:15.010969"
+      },
+      "updated_at": "2026-04-27T10:00:09.215436"
+    },
+    {
+      "strategy_id": "apuesta_trend",
+      "status": "PAUSE",
+      "reason": "verdict=PAUSE, regime=VOLATILE",
+      "metrics": {
+        "win_rate": 49.084063062469674,
+        "drawdown": -22.71373090946246
+      },
+      "last_trade": {
+        "order_id": "c209c08e-8ccf-4a19-8e64-37469b94309b",
+        "symbol": "AVAX/USD",
+        "side": "buy",
+        "qty": "1.04712",
+        "filled_avg_price": "0",
+        "status": "pending_new",
+        "recorded_at": "2026-04-26T21:53:00.873999"
+      },
+      "updated_at": "2026-04-27T10:00:09.217430"
+    },
+    {
+      "strategy_id": "apuesta_smc",
+      "status": "PAUSE",
+      "reason": "verdict=PAUSE, regime=VOLATILE",
+      "metrics": {
+        "win_rate": 59.39235499508301,
+        "drawdown": -20.049168324764246
+      },
+      "last_trade": {
+        "order_id": "4ff76e87-0173-4fbe-873b-d3fb7e3cdece",
+        "symbol": "BTC/USD",
+        "side": "buy",
+        "qty": "0.000128",
+        "filled_avg_price": "0",
+        "status": "pending_new",
+        "recorded_at": "2026-04-27T08:43:00.736182"
+      },
+      "updated_at": "2026-04-27T10:00:09.218428"
+    },
+    {
+      "strategy_id": "apuesta_eth_reversal_guard_v002",
+      "status": "PAUSE",
+      "reason": "verdict=PAUSE, regime=VOLATILE",
+      "metrics": {
+        "win_rate": 54.2306459471633,
+        "drawdown": -10.880335290311105
+      },
+      "last_trade": {
+        "order_id": "10ddb32e-42f2-47b6-8697-010b6a878454",
+        "symbol": "BTC/USD",
+        "side": "sell",
+        "qty": "0.000129",
+        "filled_avg_price": "0",
+        "status": "pending_new",
+        "recorded_at": "2026-04-27T09:06:01.072163"
+      },
+      "updated_at": "2026-04-27T10:00:09.221579"
+    }
+  ],
+  "hindsight_summary": {
+    "total_decisions": 0,
+    "pauses": 0,
+    "holds": 0,
+    "reactivations": 0,
+    "last_decision": null
+  }
+}

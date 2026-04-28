@@ -4,3 +4,206 @@
 2026-04-27 01:40:02,ETHUSD,RG2,BUY,2387.06,2379.9,2394.22,Y,
 2026-04-27 02:53:00,AVAXUSD,TREND,BUY,9.55,9.41,,Y,
 2026-04-27 03:43:02,ETHUSD,RG2,BUY,2397.33,2390.14,2404.52,Y,
+2026-04-27 04:32:15,AVAXUSD,RG2,BUY,9.52,9.49,9.55,Y,
+2026-04-27 06:19:00,BTCUSD,SMC,BUY,77807.28,77669.55,78082.75,Y,
+2026-04-27 06:30:40,BTCUSD,RG2,SELL,77725.14,77958.32,77491.96,N,insufficient_balance
+2026-04-27 06:31:32,BNBUSD,RG2,SELL,628.22,630.1,626.34,N,"error:asset ""BNBUSD"" not found"
+2026-04-27 06:32:05,XRPUSD,RG2,SELL,1.4168,1.42,1.41,N,insufficient_balance
+2026-04-27 06:32:05,AVAXUSD,RG2,SELL,9.25,9.28,9.22,Y,
+2026-04-27 06:32:39,SOLUSD,RG2,SELL,85.81,86.07,85.55,N,insufficient_balance
+2026-04-27 06:32:39,ETHUSD,RG2,SELL,2315.68,2322.63,2308.73,Y,
+2026-04-27 07:02:34,ETHUSD,RG2,SELL,2321.27,2328.23,2314.31,N,insufficient_balance
+2026-04-27 07:09:35,AVAXUSD,RG2,SELL,9.24,9.27,9.21,N,insufficient_balance
+2026-04-27 07:33:25,BTCUSD,RG2,SELL,77629.59,77862.48,77396.7,N,insufficient_balance
+2026-04-27 07:59:33,ETHUSD,RG2,SELL,2316.8,2323.75,2309.85,N,insufficient_balance
+2026-04-27 07:59:33,SOLUSD,RG2,SELL,85.33,85.59,85.07,N,error:circuito alpaca abierto
+2026-04-27 08:00:17,AVAXUSD,RG2,SELL,9.23,9.26,9.2,N,error:circuito alpaca abierto
+2026-04-27 08:00:23,AVAXUSD,RG2,SELL,9.23,9.26,9.2,N,error:circuito alpaca abierto
+2026-04-27 08:00:28,AVAXUSD,RG2,SELL,9.23,9.26,9.2,N,error:circuito alpaca abierto
+2026-04-27 08:00:34,AVAXUSD,RG2,SELL,9.23,9.26,9.2,N,error:circuito alpaca abierto
+2026-04-27 08:01:00,XRPUSD,RG2,SELL,1.4139,1.42,1.41,N,error:circuito alpaca abierto
+2026-04-27 08:01:00,BNBUSD,RG2,SELL,625.74,627.62,623.86,N,error:circuito alpaca abierto
+2026-04-27 08:01:05,XRPUSD,RG2,SELL,1.4139,1.42,1.41,N,error:circuito alpaca abierto
+2026-04-27 08:01:05,BNBUSD,RG2,SELL,625.74,627.62,623.86,N,error:circuito alpaca abierto
+2026-04-27 08:01:11,XRPUSD,RG2,SELL,1.4139,1.42,1.41,N,error:circuito alpaca abierto
+2026-04-27 08:01:11,BNBUSD,RG2,SELL,625.74,627.62,623.86,N,error:circuito alpaca abierto
+2026-04-27 08:01:16,XRPUSD,RG2,SELL,1.4139,1.42,1.41,N,error:circuito alpaca abierto
+2026-04-27 08:01:16,BNBUSD,RG2,SELL,625.74,627.62,623.86,N,error:circuito alpaca abierto
+2026-04-27 08:28:31,AVAXUSD,SMC,SELL,9.23,9.27,9.16,N,insufficient_balance
+2026-04-27 08:28:58,XRPUSD,RG2,SELL,1.4149,1.42,1.41,N,error:circuito alpaca abierto
+2026-04-27 08:29:04,XRPUSD,RG2,SELL,1.4149,1.42,1.41,N,error:circuito alpaca abierto
+2026-04-27 08:29:10,XRPUSD,RG2,SELL,1.4149,1.42,1.41,N,error:circuito alpaca abierto
+2026-04-27 08:29:15,XRPUSD,RG2,SELL,1.4149,1.42,1.41,N,error:circuito alpaca abierto
+2026-04-27 08:36:35,BNBUSD,SMC,SELL,626.72,627.21,625.73,N,"error:asset ""BNBUSD"" not found"
+2026-04-27 08:41:26,BTCUSD,RG2,SELL,77588.22,77820.98,77355.46,N,insufficient_balance
+2026-04-27 09:21:32,BTCUSD,RG2,SELL,77776.31,78009.64,77542.98,N,insufficient_balance
+2026-04-27 09:22:59,SOLUSD,RG2,SELL,85.34,85.6,85.08,N,error:circuito alpaca abierto
+2026-04-27 09:23:00,ETHUSD,RG2,SELL,2317.19,2324.14,2310.24,N,error:circuito alpaca abierto
+2026-04-27 09:23:03,XRPUSD,RG2,SELL,1.4167,1.42,1.41,N,error:circuito alpaca abierto
+2026-04-27 09:23:04,SOLUSD,RG2,SELL,85.34,85.6,85.08,N,error:circuito alpaca abierto
+2026-04-27 09:23:06,ETHUSD,RG2,SELL,2317.19,2324.14,2310.24,N,error:circuito alpaca abierto
+2026-04-27 09:23:09,XRPUSD,RG2,SELL,1.4167,1.42,1.41,N,error:circuito alpaca abierto
+2026-04-27 09:23:10,SOLUSD,RG2,SELL,85.34,85.6,85.08,N,error:circuito alpaca abierto
+2026-04-27 09:23:11,ETHUSD,RG2,SELL,2317.19,2324.14,2310.24,N,error:circuito alpaca abierto
+2026-04-27 09:23:14,XRPUSD,RG2,SELL,1.4167,1.42,1.41,N,error:circuito alpaca abierto
+2026-04-27 09:23:15,SOLUSD,RG2,SELL,85.34,85.6,85.08,N,error:circuito alpaca abierto
+2026-04-27 09:23:17,ETHUSD,RG2,SELL,2317.19,2324.14,2310.24,N,error:circuito alpaca abierto
+2026-04-27 09:23:20,XRPUSD,RG2,SELL,1.4167,1.42,1.41,N,error:circuito alpaca abierto
+2026-04-27 09:25:30,BNBUSD,RG2,SELL,627.41,629.29,625.53,N,"error:asset ""BNBUSD"" not found"
+2026-04-27 09:50:29,XRPUSD,RG2,SELL,1.4165,1.42,1.41,N,insufficient_balance
+2026-04-27 09:58:33,AVAXUSD,RG2,SELL,9.25,9.28,9.22,N,insufficient_balance
+2026-04-27 10:01:30,XRPUSD,RG2,SELL,1.4166,1.42,1.41,N,insufficient_balance
+2026-04-27 10:03:59,BTCUSD,RG2,SELL,77858.62,78092.2,77625.04,Y,
+2026-04-27 10:04:27,BNBUSD,RG2,SELL,628.19,630.07,626.31,N,"error:asset ""BNBUSD"" not found"
+2026-04-27 10:17:32,SOLUSD,RG2,SELL,85.34,85.6,85.08,N,insufficient_balance
+2026-04-27 10:25:29,AVAXUSD,RG2,SELL,9.25,9.28,9.22,N,insufficient_balance
+2026-04-27 11:05:34,ETHUSD,RG2,SELL,2318.87,2325.83,2311.91,N,insufficient_balance
+2026-04-27 11:35:27,AVAXUSD,RG2,SELL,9.25,9.28,9.22,N,insufficient_balance
+2026-04-27 11:38:33,ETHUSD,RG2,SELL,2318.57,2325.53,2311.61,N,insufficient_balance
+2026-04-27 11:38:59,BNBUSD,RG2,SELL,627.23,629.11,625.35,N,error:circuito alpaca abierto
+2026-04-27 11:39:05,BNBUSD,RG2,SELL,627.23,629.11,625.35,N,error:circuito alpaca abierto
+2026-04-27 11:39:10,BNBUSD,RG2,SELL,627.23,629.11,625.35,N,error:circuito alpaca abierto
+2026-04-27 11:39:16,BNBUSD,RG2,SELL,627.23,629.11,625.35,N,error:circuito alpaca abierto
+2026-04-27 11:40:01,SOLUSD,RG2,SELL,85.2,85.46,84.94,N,error:circuito alpaca abierto
+2026-04-27 11:40:07,SOLUSD,RG2,SELL,85.2,85.46,84.94,N,error:circuito alpaca abierto
+2026-04-27 11:40:12,SOLUSD,RG2,SELL,85.2,85.46,84.94,N,error:circuito alpaca abierto
+2026-04-27 11:40:18,SOLUSD,RG2,SELL,85.2,85.46,84.94,N,error:circuito alpaca abierto
+2026-04-27 11:42:45,AVAXUSD,RG2,SELL,9.26,9.29,9.23,N,insufficient_balance
+2026-04-27 12:01:36,ETHUSD,RG2,SELL,2318.48,2325.44,2311.52,N,insufficient_balance
+2026-04-27 12:01:59,BNBUSD,RG2,SELL,626.76,628.64,624.88,N,error:circuito alpaca abierto
+2026-04-27 12:02:00,AVAXUSD,RG2,SELL,9.25,9.28,9.22,N,error:circuito alpaca abierto
+2026-04-27 12:02:04,BNBUSD,RG2,SELL,626.76,628.64,624.88,N,error:circuito alpaca abierto
+2026-04-27 12:02:05,AVAXUSD,RG2,SELL,9.25,9.28,9.22,N,error:circuito alpaca abierto
+2026-04-27 12:02:10,BNBUSD,RG2,SELL,626.76,628.64,624.88,N,error:circuito alpaca abierto
+2026-04-27 12:02:11,AVAXUSD,RG2,SELL,9.25,9.28,9.22,N,error:circuito alpaca abierto
+2026-04-27 12:02:15,BNBUSD,RG2,SELL,626.76,628.64,624.88,N,error:circuito alpaca abierto
+2026-04-27 12:02:16,AVAXUSD,RG2,SELL,9.25,9.28,9.22,N,error:circuito alpaca abierto
+2026-04-27 12:02:59,SOLUSD,RG2,SELL,85.16,85.42,84.9,N,error:circuito alpaca abierto
+2026-04-27 12:02:59,AVAXUSD,TREND,SELL,9.24,9.38,,N,error:circuito alpaca abierto
+2026-04-27 12:03:04,SOLUSD,RG2,SELL,85.16,85.42,84.9,N,error:circuito alpaca abierto
+2026-04-27 12:03:05,AVAXUSD,TREND,SELL,9.24,9.38,,N,error:circuito alpaca abierto
+2026-04-27 12:03:10,SOLUSD,RG2,SELL,85.16,85.42,84.9,N,error:circuito alpaca abierto
+2026-04-27 12:03:10,AVAXUSD,TREND,SELL,9.24,9.38,,N,error:circuito alpaca abierto
+2026-04-27 12:03:15,SOLUSD,RG2,SELL,85.16,85.42,84.9,N,error:circuito alpaca abierto
+2026-04-27 12:03:16,AVAXUSD,TREND,SELL,9.24,9.38,,N,error:circuito alpaca abierto
+2026-04-27 12:24:31,ETHUSD,RG2,SELL,2317.37,2324.32,2310.42,N,insufficient_balance
+2026-04-27 12:24:31,AVAXUSD,RG2,SELL,9.25,9.28,9.22,N,error:circuito alpaca abierto
+2026-04-27 12:25:00,XRPUSD,RG2,SELL,1.413,1.42,1.41,N,error:circuito alpaca abierto
+2026-04-27 12:25:05,XRPUSD,RG2,SELL,1.413,1.42,1.41,N,error:circuito alpaca abierto
+2026-04-27 12:25:11,XRPUSD,RG2,SELL,1.413,1.42,1.41,N,error:circuito alpaca abierto
+2026-04-27 12:25:16,XRPUSD,RG2,SELL,1.413,1.42,1.41,N,error:circuito alpaca abierto
+2026-04-27 12:55:33,BTCUSD,RG2,SELL,77682.7,77915.75,77449.65,N,insufficient_balance
+2026-04-27 13:04:35,SOLUSD,RG2,SELL,85.06,85.32,84.8,N,insufficient_balance
+2026-04-27 13:12:00,BTCUSD,SMC,BUY,77728.86,77621.57,77943.43,Y,
+2026-04-27 13:26:42,AVAXUSD,RG2,SELL,9.24,9.27,9.21,N,insufficient_balance
+2026-04-27 13:28:30,ETHUSD,RG2,SELL,2313.91,2320.85,2306.97,N,insufficient_balance
+2026-04-27 13:39:01,ETHUSD,SMC,BUY,2317.74,2311.8,2329.62,Y,
+2026-04-27 13:43:00,BTCUSD,SMC,BUY,77874.01,77602.03,78417.97,Y,
+2026-04-27 13:44:31,XRPUSD,RG2,SELL,1.4074,1.41,1.4,N,insufficient_balance
+2026-04-27 13:45:02,BNBUSD,RG2,SELL,625.87,627.75,623.99,N,"error:asset ""BNBUSD"" not found"
+2026-04-27 13:47:00,ETHUSD,RG2,SELL,2313.22,2320.16,2306.28,Y,
+2026-04-27 13:47:33,SOLUSD,RG2,SELL,85.12,85.38,84.86,N,insufficient_balance
+2026-04-27 13:48:59,BTCUSD,RG2,SELL,77671.3,77904.31,77438.29,N,error:circuito alpaca abierto
+2026-04-27 13:48:59,SOLUSD,SMC,SELL,84.88,85.43,83.78,N,error:circuito alpaca abierto
+2026-04-27 13:49:05,BTCUSD,RG2,SELL,77671.3,77904.31,77438.29,N,error:circuito alpaca abierto
+2026-04-27 13:49:05,SOLUSD,SMC,SELL,84.88,85.43,83.78,N,error:circuito alpaca abierto
+2026-04-27 13:49:10,BTCUSD,RG2,SELL,77671.3,77904.31,77438.29,N,error:circuito alpaca abierto
+2026-04-27 13:49:10,SOLUSD,SMC,SELL,84.88,85.43,83.78,N,error:circuito alpaca abierto
+2026-04-27 13:49:16,BTCUSD,RG2,SELL,77671.3,77904.31,77438.29,N,error:circuito alpaca abierto
+2026-04-27 13:49:16,SOLUSD,SMC,SELL,84.88,85.43,83.78,N,error:circuito alpaca abierto
+2026-04-27 14:06:01,BTCUSD,RG2,SELL,77710.86,77943.99,77477.73,Y,
+2026-04-27 14:10:33,SOLUSD,RG2,SELL,85.04,85.3,84.78,N,insufficient_balance
+2026-04-27 14:30:44,XRPUSD,RG2,SELL,1.4031,1.41,1.4,N,insufficient_balance
+2026-04-27 14:53:27,ETHUSD,SMC,SELL,2320.87,2331.14,2300.34,N,insufficient_balance
+2026-04-27 14:53:58,AVAXUSD,RG2,SELL,9.27,9.3,9.24,N,insufficient_balance
+2026-04-27 14:54:27,XRPUSD,SMC,SELL,1.4,1.41,1.39,N,insufficient_balance
+2026-04-27 14:54:28,BNBUSD,SMC,SELL,626.62,628.78,622.3,N,error:circuito alpaca abierto
+2026-04-27 14:55:59,BNBUSD,RG2,SELL,626.61,628.49,624.73,N,error:circuito alpaca abierto
+2026-04-27 14:56:05,BNBUSD,RG2,SELL,626.61,628.49,624.73,N,error:circuito alpaca abierto
+2026-04-27 14:56:11,BNBUSD,RG2,SELL,626.61,628.49,624.73,N,error:circuito alpaca abierto
+2026-04-27 14:56:16,BNBUSD,RG2,SELL,626.61,628.49,624.73,N,error:circuito alpaca abierto
+2026-04-27 15:50:32,BTCUSD,TREND,SELL,76814.06,77966.27,,N,insufficient_balance
+2026-04-27 15:50:32,ETHUSD,TREND,SELL,2274.18,2308.29,,N,error:circuito alpaca abierto
+2026-04-27 15:50:32,ETHUSD,SMC,SELL,2274.18,2285.6,2251.34,N,error:circuito alpaca abierto
+2026-04-27 16:24:36,XRPUSD,RG2,SELL,1.3875,1.39,1.38,N,insufficient_balance
+2026-04-27 16:37:31,AVAXUSD,RG2,SELL,9.15,9.18,9.12,N,insufficient_balance
+2026-04-27 16:43:43,AVAXUSD,RG2,SELL,9.14,9.17,9.11,N,insufficient_balance
+2026-04-27 16:49:28,AVAXUSD,RG2,SELL,9.15,9.18,9.12,N,insufficient_balance
+2026-04-27 16:58:27,SOLUSD,RG2,SELL,84.21,84.46,83.96,N,insufficient_balance
+2026-04-27 16:58:58,ETHUSD,RG2,SELL,2276.48,2283.31,2269.65,N,error:circuito alpaca abierto
+2026-04-27 16:59:04,ETHUSD,RG2,SELL,2276.48,2283.31,2269.65,N,error:circuito alpaca abierto
+2026-04-27 16:59:09,ETHUSD,RG2,SELL,2276.48,2283.31,2269.65,N,error:circuito alpaca abierto
+2026-04-27 16:59:15,ETHUSD,RG2,SELL,2276.48,2283.31,2269.65,N,error:circuito alpaca abierto
+2026-04-27 17:21:29,BTCUSD,RG2,SELL,76629.65,76859.54,76399.76,N,insufficient_balance
+2026-04-27 17:52:31,BTCUSD,SMC,SELL,76768.41,77012.9,76279.43,N,insufficient_balance
+2026-04-27 17:53:59,XRPUSD,RG2,SELL,1.3929,1.4,1.39,N,error:circuito alpaca abierto
+2026-04-27 17:53:59,AVAXUSD,RG2,SELL,9.18,9.21,9.15,N,error:circuito alpaca abierto
+2026-04-27 17:53:59,SOLUSD,RG2,SELL,84.48,84.73,84.23,N,error:circuito alpaca abierto
+2026-04-27 17:54:05,AVAXUSD,RG2,SELL,9.18,9.21,9.15,N,error:circuito alpaca abierto
+2026-04-27 17:54:05,XRPUSD,RG2,SELL,1.3929,1.4,1.39,N,error:circuito alpaca abierto
+2026-04-27 17:54:05,SOLUSD,RG2,SELL,84.48,84.73,84.23,N,error:circuito alpaca abierto
+2026-04-27 17:54:10,AVAXUSD,RG2,SELL,9.18,9.21,9.15,N,error:circuito alpaca abierto
+2026-04-27 17:54:10,XRPUSD,RG2,SELL,1.3929,1.4,1.39,N,error:circuito alpaca abierto
+2026-04-27 17:54:10,SOLUSD,RG2,SELL,84.48,84.73,84.23,N,error:circuito alpaca abierto
+2026-04-27 17:54:16,AVAXUSD,RG2,SELL,9.18,9.21,9.15,N,error:circuito alpaca abierto
+2026-04-27 17:54:16,XRPUSD,RG2,SELL,1.3929,1.4,1.39,N,error:circuito alpaca abierto
+2026-04-27 17:54:16,SOLUSD,RG2,SELL,84.48,84.73,84.23,N,error:circuito alpaca abierto
+2026-04-27 18:26:34,SOLUSD,SMC,SELL,84.52,84.73,84.1,N,insufficient_balance
+2026-04-27 18:26:34,BTCUSD,RG2,SELL,76711.57,76941.7,76481.44,N,error:circuito alpaca abierto
+2026-04-27 18:26:34,XRPUSD,SMC,SELL,1.4,1.4,1.39,N,error:circuito alpaca abierto
+2026-04-27 18:26:59,ETHUSD,RG2,SELL,2285.8,2292.66,2278.94,N,error:circuito alpaca abierto
+2026-04-27 18:27:03,BNBUSD,RG2,SELL,622.31,624.18,620.44,N,error:circuito alpaca abierto
+2026-04-27 18:27:04,ETHUSD,RG2,SELL,2285.8,2292.66,2278.94,N,error:circuito alpaca abierto
+2026-04-27 18:27:08,BNBUSD,RG2,SELL,622.31,624.18,620.44,N,error:circuito alpaca abierto
+2026-04-27 18:27:10,ETHUSD,RG2,SELL,2285.8,2292.66,2278.94,N,error:circuito alpaca abierto
+2026-04-27 18:27:14,BNBUSD,RG2,SELL,622.31,624.18,620.44,N,error:circuito alpaca abierto
+2026-04-27 18:27:15,ETHUSD,RG2,SELL,2285.8,2292.66,2278.94,N,error:circuito alpaca abierto
+2026-04-27 18:27:19,BNBUSD,RG2,SELL,622.31,624.18,620.44,N,error:circuito alpaca abierto
+2026-04-27 18:27:59,SOLUSD,RG2,SELL,84.49,84.74,84.24,N,error:circuito alpaca abierto
+2026-04-27 18:28:05,SOLUSD,RG2,SELL,84.49,84.74,84.24,N,error:circuito alpaca abierto
+2026-04-27 18:28:10,SOLUSD,RG2,SELL,84.49,84.74,84.24,N,error:circuito alpaca abierto
+2026-04-27 18:28:10,AVAXUSD,RG2,SELL,9.17,9.2,9.14,N,error:circuito alpaca abierto
+2026-04-27 18:28:16,SOLUSD,RG2,SELL,84.49,84.74,84.24,N,error:circuito alpaca abierto
+2026-04-27 18:28:16,AVAXUSD,RG2,SELL,9.17,9.2,9.14,N,error:circuito alpaca abierto
+2026-04-27 18:28:22,AVAXUSD,RG2,SELL,9.17,9.2,9.14,N,error:circuito alpaca abierto
+2026-04-27 18:28:27,AVAXUSD,RG2,SELL,9.17,9.2,9.14,N,error:circuito alpaca abierto
+2026-04-27 19:04:28,XRPUSD,RG2,SELL,1.3944,1.4,1.39,N,insufficient_balance
+2026-04-27 19:04:29,SOLUSD,RG2,SELL,84.49,84.74,84.24,N,error:circuito alpaca abierto
+2026-04-27 19:05:59,BTCUSD,RG2,SELL,76748.45,76978.7,76518.2,N,error:circuito alpaca abierto
+2026-04-27 19:06:05,BTCUSD,RG2,SELL,76748.45,76978.7,76518.2,N,error:circuito alpaca abierto
+2026-04-27 19:06:10,BTCUSD,RG2,SELL,76748.45,76978.7,76518.2,N,error:circuito alpaca abierto
+2026-04-27 19:06:16,BTCUSD,RG2,SELL,76748.45,76978.7,76518.2,N,error:circuito alpaca abierto
+2026-04-27 19:20:36,AVAXUSD,RG2,SELL,9.18,9.21,9.15,N,insufficient_balance
+2026-04-27 19:21:59,ETHUSD,RG2,SELL,2287.39,2294.25,2280.53,N,error:circuito alpaca abierto
+2026-04-27 19:22:05,ETHUSD,RG2,SELL,2287.39,2294.25,2280.53,N,error:circuito alpaca abierto
+2026-04-27 19:22:10,ETHUSD,RG2,SELL,2287.39,2294.25,2280.53,N,error:circuito alpaca abierto
+2026-04-27 19:22:16,ETHUSD,RG2,SELL,2287.39,2294.25,2280.53,N,error:circuito alpaca abierto
+2026-04-27 19:23:28,BTCUSD,RG2,SELL,76795.06,77025.45,76564.67,N,insufficient_balance
+2026-04-27 19:53:28,ETHUSD,SMC,SELL,2286.9,2289.22,2282.27,N,insufficient_balance
+2026-04-27 20:13:32,XRPUSD,RG2,SELL,1.3908,1.39,1.39,N,insufficient_balance
+2026-04-27 20:15:01,SOLUSD,RG2,SELL,84.19,84.44,83.94,N,error:circuito alpaca abierto
+2026-04-27 20:15:07,SOLUSD,RG2,SELL,84.19,84.44,83.94,N,error:circuito alpaca abierto
+2026-04-27 20:15:13,SOLUSD,RG2,SELL,84.19,84.44,83.94,N,error:circuito alpaca abierto
+2026-04-27 20:15:18,SOLUSD,RG2,SELL,84.19,84.44,83.94,N,error:circuito alpaca abierto
+2026-04-27 20:46:33,ETHUSD,RG2,SELL,2292.17,2299.05,2285.29,N,insufficient_balance
+2026-04-27 20:46:59,XRPUSD,RG2,SELL,1.3924,1.4,1.39,N,error:circuito alpaca abierto
+2026-04-27 20:47:05,XRPUSD,RG2,SELL,1.3924,1.4,1.39,N,error:circuito alpaca abierto
+2026-04-27 20:47:11,XRPUSD,RG2,SELL,1.3924,1.4,1.39,N,error:circuito alpaca abierto
+2026-04-27 20:47:16,XRPUSD,RG2,SELL,1.3924,1.4,1.39,N,error:circuito alpaca abierto
+2026-04-27 20:49:32,SOLUSD,RG2,SELL,84.23,84.48,83.98,N,insufficient_balance
+2026-04-27 21:02:28,SOLUSD,RG2,SELL,84.19,84.44,83.94,N,insufficient_balance
+2026-04-27 21:21:29,XRPUSD,RG2,SELL,1.3919,1.4,1.39,N,insufficient_balance
+2026-04-27 21:44:30,XRPUSD,RG2,SELL,1.3918,1.4,1.39,N,insufficient_balance
+2026-04-27 21:45:58,BTCUSD,RG2,SELL,76877.09,77107.72,76646.46,N,error:circuito alpaca abierto
+2026-04-27 21:46:04,BTCUSD,RG2,SELL,76877.09,77107.72,76646.46,N,error:circuito alpaca abierto
+2026-04-27 21:46:09,BTCUSD,RG2,SELL,76877.09,77107.72,76646.46,N,error:circuito alpaca abierto
+2026-04-27 21:46:15,BTCUSD,RG2,SELL,76877.09,77107.72,76646.46,N,error:circuito alpaca abierto
+2026-04-27 21:48:30,ETHUSD,RG2,SELL,2288.94,2295.81,2282.07,N,insufficient_balance
+2026-04-27 21:51:55,AVAXUSD,RG2,SELL,9.17,9.2,9.14,N,insufficient_balance
+2026-04-27 21:54:30,BTCUSD,RG2,SELL,76886.81,77117.47,76656.15,N,insufficient_balance
+2026-04-28 00:08:33,BTCUSD,RG2,SELL,77298.01,77529.9,77066.12,N,insufficient_balance
+2026-04-28 00:10:00,BTCUSD,RG2,BUY,77357.43,77125.36,77589.5,Y,
+2026-04-28 00:21:29,BNBUSD,RG2,SELL,626.25,628.13,624.37,N,"error:asset ""BNBUSD"" not found"
+2026-04-28 00:38:26,BNBUSD,RG2,BUY,626.71,624.83,628.59,N,"error:asset ""BNBUSD"" not found"
+2026-04-28 00:38:58,ETHUSD,RG2,BUY,2305.18,2298.26,2312.1,Y,
+2026-04-28 00:38:58,SOLUSD,RG2,BUY,84.77,84.52,85.02,Y,

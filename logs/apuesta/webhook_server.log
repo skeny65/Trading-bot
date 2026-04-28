@@ -5,3 +5,227 @@
 2026-04-26 20:40:02,324 | ORDER_PLACED | symbol=ETHUSD | setup=RG2 | detail=qty=0.004189 mode=live
 2026-04-26 21:53:00,885 | ORDER_PLACED | symbol=AVAXUSD | setup=TREND | detail=qty=1.04712 mode=live
 2026-04-26 22:43:02,943 | ORDER_PLACED | symbol=ETHUSD | setup=RG2 | detail=qty=0.004171 mode=live
+2026-04-26 23:32:15,020 | ORDER_PLACED | symbol=AVAXUSD | setup=RG2 | detail=qty=1.05042 mode=live
+2026-04-26 23:32:16,016 | SIM_LOSS | symbol=ETHUSD | setup=RG2 | detail=price=2389.7 entry=2397.33 sl=2390.14 tp=2637.080659314313 pnl=-0.0318
+2026-04-26 23:44:16,898 | SIM_LOSS | symbol=AVAXUSD | setup=RG2 | detail=price=9.49 entry=9.52 sl=9.49 tp=10.472000152320025 pnl=-0.0315
+2026-04-27 01:19:00,388 | ORDER_PLACED | symbol=BTCUSD | setup=SMC | detail=qty=0.000129 mode=live
+2026-04-27 01:19:02,467 | SIM_LOSS | symbol=ETHUSD | setup=RG2 | detail=price=2323.89 entry=2364.22 sl=2357.13 tp=2600.6266193853426 pnl=-0.1706
+2026-04-27 01:19:02,471 | SIM_LOSS | symbol=AVAXUSD | setup=TREND | detail=price=9.27 entry=9.55 sl=9.41 tp=10.505000382000153 pnl=-0.2932
+2026-04-27 01:30:40,197 | REJECTED | symbol=BTCUSD | setup=RG2 | detail=insufficient balance for BTC (requested: 0.000129, available: 0.000128677)
+2026-04-27 01:31:00,681 | SIM_LOSS | symbol=BTCUSD | setup=SMC | detail=price=77657.2 entry=77807.28 sl=77669.55 tp=85559.21798449612 pnl=-0.0194
+2026-04-27 01:31:32,015 | ERROR | symbol=BNBUSD | setup=RG2 | detail=asset "BNBUSD" not found
+2026-04-27 01:32:05,751 | REJECTED | symbol=XRPUSD | setup=RG2 | detail=insufficient balance for XRP (requested: 7.058159, available: 0)
+2026-04-27 01:32:05,981 | ORDER_PLACED | symbol=AVAXUSD | setup=RG2 | detail=qty=1.081081 mode=live
+2026-04-27 01:32:39,292 | REJECTED | symbol=SOLUSD | setup=RG2 | detail=insufficient balance for SOL (requested: 0.116537, available: 0)
+2026-04-27 01:32:39,487 | ORDER_PLACED | symbol=ETHUSD | setup=RG2 | detail=qty=0.004318 mode=live
+2026-04-27 01:49:35,000 | SIM_LOSS | symbol=ETHUSD | setup=RG2 | detail=price=2324.3 entry=2315.68 sl=2322.63 tp=2084.091301528485 pnl=-0.0372
+2026-04-27 02:02:34,530 | REJECTED | symbol=ETHUSD | setup=RG2 | detail=insufficient balance for ETH (requested: 0.004308, available: 0.004021099)
+2026-04-27 02:09:02,128 | SIM_LOSS | symbol=AVAXUSD | setup=RG2 | detail=price=9.28189 entry=9.25 sl=9.28 tp=8.324999930624994 pnl=-0.0345
+2026-04-27 02:09:35,012 | REJECTED | symbol=AVAXUSD | setup=RG2 | detail=insufficient balance for AVAX (requested: 1.082251, available: 1.01121515)
+2026-04-27 02:33:25,317 | REJECTED | symbol=BTCUSD | setup=RG2 | detail=insufficient balance for BTC (requested: 0.000129, available: 0.000128677)
+2026-04-27 02:59:33,826 | REJECTED | symbol=ETHUSD | setup=RG2 | detail=insufficient balance for ETH (requested: 0.004316, available: 0.004021099)
+2026-04-27 02:59:33,921 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 03:00:17,046 | ERROR | symbol=AVAXUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 03:00:23,097 | ERROR | symbol=AVAXUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 03:00:28,609 | ERROR | symbol=AVAXUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 03:00:34,121 | ERROR | symbol=AVAXUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 03:01:00,306 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 03:01:00,349 | ERROR | symbol=BNBUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 03:01:05,849 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 03:01:05,930 | ERROR | symbol=BNBUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 03:01:11,359 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 03:01:11,443 | ERROR | symbol=BNBUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 03:01:16,873 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 03:01:16,954 | ERROR | symbol=BNBUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 03:28:31,664 | REJECTED | symbol=AVAXUSD | setup=SMC | detail=insufficient balance for AVAX (requested: 1.083424, available: 1.01121515)
+2026-04-27 03:28:58,979 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 03:29:04,503 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 03:29:10,016 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 03:29:15,524 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 03:36:35,354 | ERROR | symbol=BNBUSD | setup=SMC | detail=asset "BNBUSD" not found
+2026-04-27 03:41:26,464 | REJECTED | symbol=BTCUSD | setup=RG2 | detail=insufficient balance for BTC (requested: 0.000129, available: 0.000128677)
+2026-04-27 04:21:32,584 | REJECTED | symbol=BTCUSD | setup=RG2 | detail=insufficient balance for BTC (requested: 0.000129, available: 0.000128677)
+2026-04-27 04:22:59,272 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 04:23:00,895 | ERROR | symbol=ETHUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 04:23:03,977 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 04:23:04,789 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 04:23:06,397 | ERROR | symbol=ETHUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 04:23:09,482 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 04:23:10,314 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 04:23:11,905 | ERROR | symbol=ETHUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 04:23:14,988 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 04:23:15,840 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 04:23:17,409 | ERROR | symbol=ETHUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 04:23:20,494 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 04:25:30,652 | ERROR | symbol=BNBUSD | setup=RG2 | detail=asset "BNBUSD" not found
+2026-04-27 04:50:29,692 | REJECTED | symbol=XRPUSD | setup=RG2 | detail=insufficient balance for XRP (requested: 7.059654, available: 0)
+2026-04-27 04:58:33,860 | REJECTED | symbol=AVAXUSD | setup=RG2 | detail=insufficient balance for AVAX (requested: 1.081081, available: 1.01121515)
+2026-04-27 05:01:30,913 | REJECTED | symbol=XRPUSD | setup=RG2 | detail=insufficient balance for XRP (requested: 7.059156, available: 0)
+2026-04-27 05:03:59,995 | ORDER_PLACED | symbol=BTCUSD | setup=RG2 | detail=qty=0.000128 mode=live
+2026-04-27 05:04:27,680 | ERROR | symbol=BNBUSD | setup=RG2 | detail=asset "BNBUSD" not found
+2026-04-27 05:17:32,515 | REJECTED | symbol=SOLUSD | setup=RG2 | detail=insufficient balance for SOL (requested: 0.117178, available: 0)
+2026-04-27 05:25:29,363 | REJECTED | symbol=AVAXUSD | setup=RG2 | detail=insufficient balance for AVAX (requested: 1.081081, available: 1.01121515)
+2026-04-27 06:05:34,473 | REJECTED | symbol=ETHUSD | setup=RG2 | detail=insufficient balance for ETH (requested: 0.004312, available: 0.004021099)
+2026-04-27 06:35:27,992 | REJECTED | symbol=AVAXUSD | setup=RG2 | detail=insufficient balance for AVAX (requested: 1.081081, available: 1.01121515)
+2026-04-27 06:38:33,524 | REJECTED | symbol=ETHUSD | setup=RG2 | detail=insufficient balance for ETH (requested: 0.004313, available: 0.004021099)
+2026-04-27 06:38:59,504 | ERROR | symbol=BNBUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 06:39:05,012 | ERROR | symbol=BNBUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 06:39:10,521 | ERROR | symbol=BNBUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 06:39:16,033 | ERROR | symbol=BNBUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 06:40:01,744 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 06:40:07,254 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 06:40:12,764 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 06:40:18,285 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 06:42:45,430 | REJECTED | symbol=AVAXUSD | setup=RG2 | detail=insufficient balance for AVAX (requested: 1.079914, available: 1.01121515)
+2026-04-27 07:01:36,690 | REJECTED | symbol=ETHUSD | setup=RG2 | detail=insufficient balance for ETH (requested: 0.004313, available: 0.004021099)
+2026-04-27 07:01:59,342 | ERROR | symbol=BNBUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 07:02:00,044 | ERROR | symbol=AVAXUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 07:02:04,876 | ERROR | symbol=BNBUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 07:02:05,546 | ERROR | symbol=AVAXUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 07:02:10,389 | ERROR | symbol=BNBUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 07:02:11,043 | ERROR | symbol=AVAXUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 07:02:15,900 | ERROR | symbol=BNBUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 07:02:16,566 | ERROR | symbol=AVAXUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 07:02:59,427 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 07:02:59,884 | ERROR | symbol=AVAXUSD | setup=TREND | detail=circuito alpaca abierto
+2026-04-27 07:03:04,950 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 07:03:05,395 | ERROR | symbol=AVAXUSD | setup=TREND | detail=circuito alpaca abierto
+2026-04-27 07:03:10,479 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 07:03:10,898 | ERROR | symbol=AVAXUSD | setup=TREND | detail=circuito alpaca abierto
+2026-04-27 07:03:15,987 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 07:03:16,404 | ERROR | symbol=AVAXUSD | setup=TREND | detail=circuito alpaca abierto
+2026-04-27 07:24:31,349 | REJECTED | symbol=ETHUSD | setup=RG2 | detail=insufficient balance for ETH (requested: 0.004315, available: 0.004021099)
+2026-04-27 07:24:31,449 | ERROR | symbol=AVAXUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 07:25:00,280 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 07:25:05,808 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 07:25:11,317 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 07:25:16,828 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 07:55:33,803 | REJECTED | symbol=BTCUSD | setup=RG2 | detail=insufficient balance for BTC (requested: 0.000129, available: 0.000000677)
+2026-04-27 08:04:35,015 | REJECTED | symbol=SOLUSD | setup=RG2 | detail=insufficient balance for SOL (requested: 0.117564, available: 0)
+2026-04-27 08:12:00,872 | ORDER_PLACED | symbol=BTCUSD | setup=SMC | detail=qty=0.000129 mode=live
+2026-04-27 08:26:42,096 | REJECTED | symbol=AVAXUSD | setup=RG2 | detail=insufficient balance for AVAX (requested: 1.082251, available: 1.01121515)
+2026-04-27 08:28:30,590 | REJECTED | symbol=ETHUSD | setup=RG2 | detail=insufficient balance for ETH (requested: 0.004322, available: 0.004021099)
+2026-04-27 08:39:01,267 | ORDER_PLACED | symbol=ETHUSD | setup=SMC | detail=qty=0.004315 mode=live
+2026-04-27 08:43:00,740 | ORDER_PLACED | symbol=BTCUSD | setup=SMC | detail=qty=0.000128 mode=live
+2026-04-27 08:44:31,246 | REJECTED | symbol=XRPUSD | setup=RG2 | detail=insufficient balance for XRP (requested: 7.105301, available: 0)
+2026-04-27 08:45:02,097 | ERROR | symbol=BNBUSD | setup=RG2 | detail=asset "BNBUSD" not found
+2026-04-27 08:47:00,982 | ORDER_PLACED | symbol=ETHUSD | setup=RG2 | detail=qty=0.004323 mode=live
+2026-04-27 08:47:33,812 | REJECTED | symbol=SOLUSD | setup=RG2 | detail=insufficient balance for SOL (requested: 0.117481, available: 0)
+2026-04-27 08:48:59,607 | ERROR | symbol=BTCUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 08:48:59,811 | ERROR | symbol=SOLUSD | setup=SMC | detail=circuito alpaca abierto
+2026-04-27 08:49:05,252 | ERROR | symbol=BTCUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 08:49:05,335 | ERROR | symbol=SOLUSD | setup=SMC | detail=circuito alpaca abierto
+2026-04-27 08:49:10,763 | ERROR | symbol=BTCUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 08:49:10,847 | ERROR | symbol=SOLUSD | setup=SMC | detail=circuito alpaca abierto
+2026-04-27 08:49:16,280 | ERROR | symbol=BTCUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 08:49:16,362 | ERROR | symbol=SOLUSD | setup=SMC | detail=circuito alpaca abierto
+2026-04-27 09:06:01,076 | ORDER_PLACED | symbol=BTCUSD | setup=RG2 | detail=qty=0.000129 mode=live
+2026-04-27 09:10:33,136 | REJECTED | symbol=SOLUSD | setup=RG2 | detail=insufficient balance for SOL (requested: 0.117592, available: 0)
+2026-04-27 09:30:44,164 | REJECTED | symbol=XRPUSD | setup=RG2 | detail=insufficient balance for XRP (requested: 7.127076, available: 0)
+2026-04-27 09:41:12,308 | SIM_LOSS | symbol=BTCUSD | setup=RG2 | detail=price=78064.3 entry=77710.86 sl=77943.99 tp=69958.92201550388 pnl=-0.0456
+2026-04-27 09:41:12,310 | SIM_LOSS | symbol=ETHUSD | setup=RG2 | detail=price=2325.6 entry=2313.22 sl=2320.16 tp=2081.899157992135 pnl=-0.0535
+2026-04-27 09:53:27,122 | REJECTED | symbol=ETHUSD | setup=SMC | detail=insufficient balance for ETH (requested: 0.004309, available: 0.004002311)
+2026-04-27 09:53:58,105 | REJECTED | symbol=AVAXUSD | setup=RG2 | detail=insufficient balance for AVAX (requested: 1.078749, available: 1.01121515)
+2026-04-27 09:54:27,977 | REJECTED | symbol=XRPUSD | setup=SMC | detail=insufficient balance for XRP (requested: 7.142857, available: 0)
+2026-04-27 09:54:28,061 | ERROR | symbol=BNBUSD | setup=SMC | detail=circuito alpaca abierto
+2026-04-27 09:55:59,976 | ERROR | symbol=BNBUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 09:56:05,503 | ERROR | symbol=BNBUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 09:56:11,057 | ERROR | symbol=BNBUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 09:56:16,575 | ERROR | symbol=BNBUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 10:50:32,692 | REJECTED | symbol=BTCUSD | setup=TREND | detail=insufficient balance for BTC (requested: 0.00013, available: 0.000128034)
+2026-04-27 10:50:32,778 | ERROR | symbol=ETHUSD | setup=TREND | detail=circuito alpaca abierto
+2026-04-27 10:50:32,781 | ERROR | symbol=ETHUSD | setup=SMC | detail=circuito alpaca abierto
+2026-04-27 11:24:36,012 | REJECTED | symbol=XRPUSD | setup=RG2 | detail=insufficient balance for XRP (requested: 7.207207, available: 0)
+2026-04-27 11:37:31,401 | REJECTED | symbol=AVAXUSD | setup=RG2 | detail=insufficient balance for AVAX (requested: 1.092896, available: 1.01121515)
+2026-04-27 11:43:43,669 | REJECTED | symbol=AVAXUSD | setup=RG2 | detail=insufficient balance for AVAX (requested: 1.094092, available: 1.01121515)
+2026-04-27 11:49:28,355 | REJECTED | symbol=AVAXUSD | setup=RG2 | detail=insufficient balance for AVAX (requested: 1.092896, available: 1.01121515)
+2026-04-27 11:58:27,919 | REJECTED | symbol=SOLUSD | setup=RG2 | detail=insufficient balance for SOL (requested: 0.118751, available: 0)
+2026-04-27 11:58:58,796 | ERROR | symbol=ETHUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 11:59:04,336 | ERROR | symbol=ETHUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 11:59:09,864 | ERROR | symbol=ETHUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 11:59:15,389 | ERROR | symbol=ETHUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 12:21:29,583 | REJECTED | symbol=BTCUSD | setup=RG2 | detail=insufficient balance for BTC (requested: 0.00013, available: 0.000128034)
+2026-04-27 12:52:31,051 | REJECTED | symbol=BTCUSD | setup=SMC | detail=insufficient balance for BTC (requested: 0.00013, available: 0.000128034)
+2026-04-27 12:53:59,465 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 12:53:59,511 | ERROR | symbol=AVAXUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 12:53:59,789 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 12:54:05,081 | ERROR | symbol=AVAXUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 12:54:05,086 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 12:54:05,293 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 12:54:10,593 | ERROR | symbol=AVAXUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 12:54:10,677 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 12:54:10,807 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 12:54:16,144 | ERROR | symbol=AVAXUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 12:54:16,192 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 12:54:16,314 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 13:26:34,630 | REJECTED | symbol=SOLUSD | setup=SMC | detail=insufficient balance for SOL (requested: 0.118315, available: 0)
+2026-04-27 13:26:34,716 | ERROR | symbol=BTCUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 13:26:34,719 | ERROR | symbol=XRPUSD | setup=SMC | detail=circuito alpaca abierto
+2026-04-27 13:26:59,358 | ERROR | symbol=ETHUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 13:27:03,020 | ERROR | symbol=BNBUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 13:27:04,878 | ERROR | symbol=ETHUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 13:27:08,529 | ERROR | symbol=BNBUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 13:27:10,397 | ERROR | symbol=ETHUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 13:27:14,050 | ERROR | symbol=BNBUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 13:27:15,906 | ERROR | symbol=ETHUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 13:27:19,548 | ERROR | symbol=BNBUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 13:27:59,673 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 13:28:05,220 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 13:28:10,748 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 13:28:10,977 | ERROR | symbol=AVAXUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 13:28:16,256 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 13:28:16,519 | ERROR | symbol=AVAXUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 13:28:22,028 | ERROR | symbol=AVAXUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 13:28:27,538 | ERROR | symbol=AVAXUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 14:04:28,914 | REJECTED | symbol=XRPUSD | setup=RG2 | detail=insufficient balance for XRP (requested: 7.171543, available: 0)
+2026-04-27 14:04:29,002 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 14:05:59,498 | ERROR | symbol=BTCUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 14:06:05,039 | ERROR | symbol=BTCUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 14:06:10,560 | ERROR | symbol=BTCUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 14:06:16,075 | ERROR | symbol=BTCUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 14:20:36,846 | REJECTED | symbol=AVAXUSD | setup=RG2 | detail=insufficient balance for AVAX (requested: 1.089325, available: 1.01121515)
+2026-04-27 14:21:59,726 | ERROR | symbol=ETHUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 14:22:05,262 | ERROR | symbol=ETHUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 14:22:10,788 | ERROR | symbol=ETHUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 14:22:16,324 | ERROR | symbol=ETHUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 14:23:28,490 | REJECTED | symbol=BTCUSD | setup=RG2 | detail=insufficient balance for BTC (requested: 0.00013, available: 0.000128034)
+2026-04-27 14:53:28,384 | REJECTED | symbol=ETHUSD | setup=SMC | detail=insufficient balance for ETH (requested: 0.004373, available: 0.004002311)
+2026-04-27 15:13:32,817 | REJECTED | symbol=XRPUSD | setup=RG2 | detail=insufficient balance for XRP (requested: 7.190106, available: 0)
+2026-04-27 15:15:01,972 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 15:15:07,512 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 15:15:13,065 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 15:15:18,585 | ERROR | symbol=SOLUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 15:46:33,499 | REJECTED | symbol=ETHUSD | setup=RG2 | detail=insufficient balance for ETH (requested: 0.004363, available: 0.004002311)
+2026-04-27 15:46:59,960 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 15:47:05,500 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 15:47:11,016 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 15:47:16,526 | ERROR | symbol=XRPUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 15:49:32,774 | REJECTED | symbol=SOLUSD | setup=RG2 | detail=insufficient balance for SOL (requested: 0.118723, available: 0)
+2026-04-27 16:02:28,944 | REJECTED | symbol=SOLUSD | setup=RG2 | detail=insufficient balance for SOL (requested: 0.118779, available: 0)
+2026-04-27 16:21:29,139 | REJECTED | symbol=XRPUSD | setup=RG2 | detail=insufficient balance for XRP (requested: 7.184424, available: 0)
+2026-04-27 16:44:30,256 | REJECTED | symbol=XRPUSD | setup=RG2 | detail=insufficient balance for XRP (requested: 7.18494, available: 0)
+2026-04-27 16:45:58,612 | ERROR | symbol=BTCUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 16:46:04,125 | ERROR | symbol=BTCUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 16:46:09,643 | ERROR | symbol=BTCUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 16:46:15,159 | ERROR | symbol=BTCUSD | setup=RG2 | detail=circuito alpaca abierto
+2026-04-27 16:48:30,589 | REJECTED | symbol=ETHUSD | setup=RG2 | detail=insufficient balance for ETH (requested: 0.004369, available: 0.004002311)
+2026-04-27 16:51:55,607 | REJECTED | symbol=AVAXUSD | setup=RG2 | detail=insufficient balance for AVAX (requested: 1.090513, available: 1.01121515)
+2026-04-27 16:54:30,447 | REJECTED | symbol=BTCUSD | setup=RG2 | detail=insufficient balance for BTC (requested: 0.00013, available: 0.000128034)
+2026-04-27 18:32:29,989 | SIM_LOSS | symbol=BTCUSD | setup=RG1 | detail=price=77107.82 entry=78221.0 sl=78103.67 tp=86033.5 pnl=-0.1425
+2026-04-27 18:32:29,991 | SIM_LOSS | symbol=ETHUSD | setup=RG2 | detail=price=2295.36 entry=2364.22 sl=2357.13 tp=2600.6266193853426 pnl=-0.2913
+2026-04-27 18:32:29,992 | SIM_LOSS | symbol=AVAXUSD | setup=TREND | detail=price=9.24905 entry=9.55 sl=9.41 tp=10.505000382000153 pnl=-0.3151
+2026-04-27 18:42:47,041 | SIM_LOSS | symbol=BTCUSD | setup=RG1 | detail=price=77290.455 entry=78221.0 sl=78103.67 tp=86033.5 pnl=-0.1191
+2026-04-27 18:42:47,046 | SIM_LOSS | symbol=ETHUSD | setup=RG2 | detail=price=2295.1 entry=2364.22 sl=2357.13 tp=2600.6266193853426 pnl=-0.2924
+2026-04-27 18:42:47,052 | SIM_LOSS | symbol=AVAXUSD | setup=TREND | detail=price=9.24905 entry=9.55 sl=9.41 tp=10.505000382000153 pnl=-0.3151
+2026-04-27 19:08:33,485 | REJECTED | symbol=BTCUSD | setup=RG2 | detail=insufficient balance for BTC (requested: 0.000129, available: 0.000128034)
+2026-04-27 19:10:00,723 | ORDER_PLACED | symbol=BTCUSD | setup=RG2 | detail=qty=0.000129 mode=live
+2026-04-27 19:21:04,501 | SIM_LOSS | symbol=BTCUSD | setup=RG1 | detail=price=77333.0 entry=78221.0 sl=78103.67 tp=86033.5 pnl=-0.1137
+2026-04-27 19:21:04,507 | SIM_LOSS | symbol=ETHUSD | setup=RG2 | detail=price=2302.28 entry=2364.22 sl=2357.13 tp=2600.6266193853426 pnl=-0.262
+2026-04-27 19:21:04,512 | SIM_LOSS | symbol=AVAXUSD | setup=TREND | detail=price=9.2816 entry=9.55 sl=9.41 tp=10.505000382000153 pnl=-0.281
+2026-04-27 19:21:29,714 | ERROR | symbol=BNBUSD | setup=RG2 | detail=entry=626.25 sl=628.13 tp=563.624749498998 side=SELL qty=0.015968 | asset "BNBUSD" not found
+2026-04-27 19:35:44,795 | SIM_LOSS | symbol=BTCUSD | setup=RG1 | detail=price=77293.0 entry=78221.0 sl=78103.67 tp=86033.5 pnl=-0.1188
+2026-04-27 19:35:44,797 | SIM_LOSS | symbol=ETHUSD | setup=RG2 | detail=price=2299.2 entry=2364.22 sl=2357.13 tp=2600.6266193853426 pnl=-0.275
+2026-04-27 19:35:44,799 | SIM_LOSS | symbol=AVAXUSD | setup=TREND | detail=price=9.20892 entry=9.55 sl=9.41 tp=10.505000382000153 pnl=-0.3572
+2026-04-27 19:38:26,852 | ERROR | symbol=BNBUSD | setup=RG2 | detail=entry=626.71 sl=624.83 tp=689.382348959639 side=BUY qty=0.015956 | asset "BNBUSD" not found
+2026-04-27 19:38:58,400 | ORDER_PLACED | symbol=ETHUSD | setup=RG2 | detail=qty=0.004338 mode=live
+2026-04-27 19:38:58,753 | ORDER_PLACED | symbol=SOLUSD | setup=RG2 | detail=qty=0.117966 mode=live
