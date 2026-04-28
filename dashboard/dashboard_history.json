@@ -2206,5 +2206,101 @@
     "regime_name": "Volatile",
     "regime_confidence": 70.0,
     "adaptation_score_avg": 50.0
+  },
+  {
+    "timestamp": "2026-04-27T23:20:01.817684",
+    "date": "2026-04-27",
+    "bots_activos": 0,
+    "bots_pausados": 0,
+    "total_bots": 13,
+    "win_rate_avg": 51.0,
+    "max_drawdown": -22.7,
+    "regime_name": "Volatile",
+    "regime_confidence": 70.0,
+    "adaptation_score_avg": 50.0
+  },
+  {
+    "timestamp": "2026-04-27T23:22:28.777962",
+    "date": "2026-04-27",
+    "bots_activos": 0,
+    "bots_pausados": 0,
+    "total_bots": 13,
+    "win_rate_avg": 51.0,
+    "max_drawdown": -22.7,
+    "regime_name": "Volatile",
+    "regime_confidence": 70.0,
+    "adaptation_score_avg": 50.0
+  },
+  {
+    "timestamp": "2026-04-27T23:22:58.035433",
+    "date": "2026-04-27",
+    "bots_activos": 0,
+    "bots_pausados": 0,
+    "total_bots": 13,
+    "win_rate_avg": 51.0,
+    "max_drawdown": -22.7,
+    "regime_name": "Volatile",
+    "regime_confidence": 70.0,
+    "adaptation_score_avg": 50.0
+  },
+  {
+    "timestamp": "2026-04-27T23:26:29.089790",
+    "date": "2026-04-27",
+    "bots_activos": 0,
+    "bots_pausados": 0,
+    "total_bots": 13,
+    "win_rate_avg": 51.0,
+    "max_drawdown": -22.7,
+    "regime_name": "Volatile",
+    "regime_confidence": 70.0,
+    "adaptation_score_avg": 50.0
+  },
+  {
+    "timestamp": "2026-04-27T23:59:33.202998",
+    "date": "2026-04-27",
+    "bots_activos": 0,
+    "bots_pausados": 0,
+    "total_bots": 13,
+    "win_rate_avg": 51.0,
+    "max_drawdown": -22.7,
+    "regime_name": "Volatile",
+    "regime_confidence": 70.0,
+    "adaptation_score_avg": 50.0
+  },
+  {
+    "timestamp": "2026-04-28T00:15:33.937049",
+    "date": "2026-04-28",
+    "bots_activos": 0,
+    "bots_pausados": 0,
+    "total_bots": 13,
+    "win_rate_avg": 51.0,
+    "max_drawdown": -22.7,
+    "regime_name": "Volatile",
+    "regime_confidence": 70.0,
+    "adaptation_score_avg": 50.0
+  },
+  {
+    "timestamp": "2026-04-28T00:36:59.570379",
+    "date": "2026-04-28",
+    "bots_activos": 0,
+    "bots_pausados": 0,
+    "total_bots": 13,
+    "win_rate_avg": 51.0,
+    "max_drawdown": -22.7,
+    "regime_name": "Volatile",
+    "regime_confidence": 70.0,
+    "adaptation_score_avg": 50.0
+  },
+  {
+    "timestamp": "2026-04-28T00:51:59.302876",
+    "date": "2026-04-28",
+    "bots_activos": 0,
+    "bots_pausados": 0,
+    "total_bots": 13,
+    "win_rate_avg": 51.0,
+    "max_drawdown": -22.7,
+    "regime_name": "Volatile",
+    "regime_confidence": 70.0,
+    "adaptation_score_avg": 50.0
   }
 ]
