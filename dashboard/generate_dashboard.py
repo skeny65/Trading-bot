@@ -546,18 +546,21 @@ class DashboardGenerator:
 
         ops_sorted = sorted(ops, key=lambda x: parse_ts(x.get("ts", "")), reverse=True)[:40]
 
-        wins = sum(1 for o in ops_sorted if o["outcome"] == "WIN")
-        losses = sum(1 for o in ops_sorted if o["outcome"] == "LOSS")
+        wins = sum(1 for o in ops_sorted if o["outcome"] in {"WIN", "REJECTED_WIN"})
+        losses = sum(1 for o in ops_sorted if o["outcome"] in {"LOSS", "REJECTED_LOSS"})
         open_ops = sum(1 for o in ops_sorted if o["outcome"] in {"OPEN", "NEW", "ACCEPTED"})
+        rejected_ops = sum(1 for o in ops_sorted if o["outcome"] in {"REJECTED", "BLOCKED"})
 
         rows = []
         for o in ops_sorted:
             outcome = o.get("outcome", "")
             cls = "status-hold"
-            if outcome in {"WIN", "FILLED"}:
+            if outcome in {"WIN", "FILLED", "REJECTED_WIN"}:
                 cls = "status-active"
-            elif outcome in {"LOSS", "REJECTED", "ERROR"}:
+            elif outcome in {"LOSS", "ERROR", "REJECTED_LOSS"}:
                 cls = "status-paused"
+            elif outcome in {"REJECTED", "BLOCKED"}:
+                cls = "status-rejected"
 
             rows.append(
                 "<tr>"
@@ -582,6 +585,7 @@ class DashboardGenerator:
             "ops_win": str(wins),
             "ops_loss": str(losses),
             "ops_open": str(open_ops),
+            "ops_rejected": str(rejected_ops),
         }
     
     def _build_signals_section(self) -> Dict:
@@ -671,6 +675,7 @@ class DashboardGenerator:
             "{{ops_win}}": operations_summary["ops_win"],
             "{{ops_loss}}": operations_summary["ops_loss"],
             "{{ops_open}}": operations_summary["ops_open"],
+            "{{ops_rejected}}": operations_summary.get("ops_rejected", "0"),
             "{{signals_rows}}": signals_summary["signals_rows"],
             "{{sig_total}}": signals_summary["sig_total"],
             "{{sig_executed}}": signals_summary["sig_executed"],

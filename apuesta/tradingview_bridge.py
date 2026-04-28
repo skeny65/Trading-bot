@@ -60,6 +60,10 @@ class TradingViewBridge:
         self.data_dir = Path("data") / "apuesta"
         self.data_dir.mkdir(parents=True, exist_ok=True)
 
+        # Tracks rejected/blocked signals for WIN/LOSS simulation.
+        # Key: unique sim_id, value: same structure as active_positions + "outcome_base".
+        self.rejected_sim_positions: Dict[str, Dict] = {}
+
         self.webhook_log_path = self.logs_dir / "webhook_server.log"
         self.webhook_logger = setup_logger("apuesta_webhook", str(self.webhook_log_path))
         self.text_log_path = self.logs_dir / "trades_log.txt"
@@ -311,12 +315,17 @@ class TradingViewBridge:
             }, 200
         except Exception as e:
             error_msg = str(e)
+            price_detail = f"entry={entry} sl={sl} tp={tp_target} side={action.upper()} qty={qty}"
             if "insufficient balance" in error_msg.lower():
                 self._register_paper_signal(payload, symbol, action, setup, executed=False, skip_reason="insufficient_balance")
-                self._log_text("REJECTED", symbol, setup, error_msg)
+                self._append_rejected_to_report(symbol, setup, action, entry, sl, tp_target, qty, "REJECTED", error_msg)
+                self._track_rejected_for_sim(symbol, setup, action, entry, sl, tp_target, qty)
+                self._log_text("REJECTED", symbol, setup, f"{price_detail} | {error_msg}")
                 return {"status": "rejected", "source": "tradingview", "reason": error_msg}, 200
 
             self._register_paper_signal(payload, symbol, action, setup, executed=False, skip_reason=f"error:{error_msg[:80]}")
+            self._append_rejected_to_report(symbol, setup, action, entry, sl, tp_target, qty, "BLOCKED", error_msg)
+            self._track_rejected_for_sim(symbol, setup, action, entry, sl, tp_target, qty)
             self._register_loss()
             if self.trade_logger:
                 self.trade_logger.log_signal_rejected(
@@ -325,7 +334,7 @@ class TradingViewBridge:
                 )
             if self.notifier and getattr(self.notifier, "enabled", False):
                 await self.notifier.send_order_error(strategy_id, error_msg, payload)
-            self._log_text("ERROR", symbol, setup, error_msg)
+            self._log_text("ERROR", symbol, setup, f"{price_detail} | {error_msg}")
             return {"status": "error", "source": "tradingview", "detail": error_msg}, 500
 
     def _has_open_position(self, symbol: str) -> bool:
@@ -383,16 +392,19 @@ class TradingViewBridge:
         """Evalúa operaciones abiertas contra precio de mercado.
         Marca WIN si precio >= TP (buy) o LOSS si precio <= SL (buy).
         Escribe en trades_report.csv sin cerrar nada en Alpaca.
+        También evalúa señales rechazadas/bloqueadas para simulación de análisis.
         """
-        if not self.active_positions:
+        if not self.active_positions and not self.rejected_sim_positions:
             return
 
         # Obtener precios una vez por símbolo único
-        symbols = list({pos["symbol"] for pos in self.active_positions.values()})
+        all_positions = {**self.active_positions, **self.rejected_sim_positions}
+        symbols = list({pos["symbol"] for pos in all_positions.values()})
         prices: Dict[str, Optional[float]] = {}
         for sym in symbols:
             prices[sym] = self._get_current_price(sym)
 
+        # --- Evaluar posiciones reales (ejecutadas en Alpaca) ---
         to_resolve = []
         for symbol, pos in list(self.active_positions.items()):
             current_price = prices.get(pos["symbol"])
@@ -452,6 +464,68 @@ class TradingViewBridge:
 
             self._log_text(f"SIM_{outcome}", symbol, pos.get("setup", "TV"),
                            f"price={current_price} entry={entry} sl={pos.get('sl')} tp={pos.get('tp')} pnl={pnl}")
+
+        # --- Evaluar señales rechazadas/bloqueadas (simulación de análisis) ---
+        rej_to_resolve = []
+        for sim_key, pos in list(self.rejected_sim_positions.items()):
+            current_price = prices.get(pos["symbol"])
+            if current_price is None:
+                continue
+
+            entry = pos.get("entry")
+            sl    = pos.get("sl")
+            tp    = pos.get("tp")
+            side  = pos.get("side", "BUY")
+
+            if not entry:
+                continue
+
+            outcome = None
+            if side == "BUY":
+                if tp and current_price >= tp:
+                    outcome = "WIN"
+                elif sl and current_price <= sl:
+                    outcome = "LOSS"
+            else:
+                if tp and current_price <= tp:
+                    outcome = "WIN"
+                elif sl and current_price >= sl:
+                    outcome = "LOSS"
+
+            if outcome:
+                rej_to_resolve.append((sim_key, pos, current_price, outcome))
+
+        for sim_key, pos, current_price, outcome in rej_to_resolve:
+            self.rejected_sim_positions.pop(sim_key, None)
+            symbol    = pos["symbol"]
+            open_ts   = pos.get("open_ts", time.time())
+            duration  = int(time.time() - open_ts)
+            entry     = pos.get("entry", "")
+            qty       = pos.get("qty", "")
+            side      = pos.get("side", "BUY")
+            pnl       = ""
+            if entry and qty:
+                try:
+                    pnl = round((current_price - float(entry)) * float(qty) if side == "BUY"
+                                else (float(entry) - current_price) * float(qty), 4)
+                except Exception:
+                    pass
+
+            # El outcome incluye "REJECTED_" o "BLOCKED_" para diferenciarlo en el dashboard
+            resolved_outcome = f"REJECTED_{outcome}"
+
+            with self.trades_report_csv.open("a", encoding="utf-8", newline="") as f:
+                csv.writer(f).writerow([
+                    pos.get("open_time_utc", ""),
+                    datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+                    duration, symbol, pos.get("setup", "TV"), side,
+                    entry, pos.get("sl", ""), pos.get("tp", ""),
+                    qty, "sim_rejected", current_price, pnl, resolved_outcome,
+                    self.risk_usdt, "", "", "", "sim_rejected_eval",
+                ])
+
+            self._log_text(f"SIM_{resolved_outcome}", symbol, pos.get("setup", "TV"),
+                           f"price={current_price} entry={entry} sl={pos.get('sl')} tp={pos.get('tp')} pnl={pnl} (no ejecutada)")
 
     def _roll_day(self):
         today = datetime.now(timezone.utc).date()
@@ -659,6 +733,48 @@ class TradingViewBridge:
                 "",
                 "",
             ])
+
+    def _append_rejected_to_report(self, symbol, setup, action, entry, sl, tp, qty, outcome: str, reason: str):
+        """Agrega una fila REJECTED/BLOCKED a trades_report.csv para análisis posterior."""
+        with self.trades_report_csv.open("a", encoding="utf-8", newline="") as f:
+            csv.writer(f).writerow([
+                datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),  # open_time_utc
+                "",        # close_time_utc
+                "",        # duration_sec
+                symbol,
+                setup,
+                action.upper(),
+                entry or "",
+                sl or "",
+                tp or "",
+                qty or "",
+                "alpaca",  # leverage
+                "",        # close_price
+                "",        # pnl_usdt
+                outcome,   # REJECTED / BLOCKED
+                self.risk_usdt,
+                "",        # margin_usdt
+                "",        # notional_usdt
+                "",        # order_id
+                reason[:100] if reason else "",  # mode → reused as reason
+            ])
+
+    def _track_rejected_for_sim(self, symbol, setup, action, entry, sl, tp, qty):
+        """Agrega la señal rechazada al tracker de simulación WIN/LOSS."""
+        if not entry or not sl or not tp:
+            return
+        sim_key = f"{symbol}_rej_{int(time.time() * 1000)}"
+        self.rejected_sim_positions[sim_key] = {
+            "open_time_utc": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+            "open_ts": time.time(),
+            "symbol": symbol,
+            "setup": setup,
+            "side": action.upper(),
+            "entry": entry,
+            "sl": sl,
+            "tp": tp,
+            "qty": qty,
+        }
 
     def _log_text(self, event: str, symbol: str, setup: str, detail: str):
         ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")

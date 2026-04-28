@@ -113,6 +113,12 @@
             border: 1px solid #ff4757;
         }
         
+        .status-rejected {
+            background: rgba(200, 100, 255, 0.2);
+            color: #c864ff;
+            border: 1px solid #c864ff;
+        }
+        
         .status-hold {
             background: rgba(255, 165, 2, 0.2);
             color: #ffa502;
@@ -409,6 +415,10 @@
                     <div>
                         <div class="metric-label">OPEN/Pending</div>
                         <div class="metric-value metric-neutral" style="font-size: 1.3em;">{{ops_open}}</div>
+                    </div>
+                    <div>
+                        <div class="metric-label">Rechazadas</div>
+                        <div class="metric-value" style="font-size: 1.3em; color: #c864ff;">{{ops_rejected}}</div>
                     </div>
                 </div>
                 <table>
