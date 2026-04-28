@@ -249,6 +249,25 @@ class TradingViewBridge:
 
         qty = self._calculate_qty(entry, sl, payload.get("size"))
         tp_target = self._recalculate_tp(entry, sl, action, qty, tp)
+        price_detail = f"entry={entry} sl={sl} tp={tp_target} side={action.upper()} qty={qty}"
+
+        # Preflight: evitar órdenes inviables que solo disparan errores/reintentos.
+        is_tradeable, tradeable_reason = self._is_symbol_tradeable(symbol)
+        if not is_tradeable:
+            self._register_paper_signal(payload, symbol, action, setup, executed=False, skip_reason="asset_not_found")
+            self._append_rejected_to_report(symbol, setup, action, entry, sl, tp_target, qty, "BLOCKED", tradeable_reason)
+            self._track_rejected_for_sim(symbol, setup, action, entry, sl, tp_target, qty)
+            self._log_text("BLOCKED", symbol, setup, f"{price_detail} | {tradeable_reason}")
+            return {"status": "blocked", "source": "tradingview", "reason": tradeable_reason}, 200
+
+        # En spot crypto, sell sin posición abierta suele fallar por balance insuficiente.
+        if broker_side == "sell" and not self._has_open_position(symbol):
+            reason = f"no open position to sell for {symbol}"
+            self._register_paper_signal(payload, symbol, action, setup, executed=False, skip_reason="no_position_to_sell")
+            self._append_rejected_to_report(symbol, setup, action, entry, sl, tp_target, qty, "BLOCKED", reason)
+            self._track_rejected_for_sim(symbol, setup, action, entry, sl, tp_target, qty)
+            self._log_text("BLOCKED", symbol, setup, f"{price_detail} | {reason}")
+            return {"status": "blocked", "source": "tradingview", "reason": reason}, 200
 
         signal = {
             "strategy_id": strategy_id,
@@ -315,7 +334,6 @@ class TradingViewBridge:
             }, 200
         except Exception as e:
             error_msg = str(e)
-            price_detail = f"entry={entry} sl={sl} tp={tp_target} side={action.upper()} qty={qty}"
             if "insufficient balance" in error_msg.lower():
                 self._register_paper_signal(payload, symbol, action, setup, executed=False, skip_reason="insufficient_balance")
                 self._append_rejected_to_report(symbol, setup, action, entry, sl, tp_target, qty, "REJECTED", error_msg)
@@ -338,7 +356,12 @@ class TradingViewBridge:
             return {"status": "error", "source": "tradingview", "detail": error_msg}, 500
 
     def _has_open_position(self, symbol: str) -> bool:
-        positions_data = self.order_router.client.get_positions()
+        try:
+            positions_data = self.order_router.client.get_positions()
+        except Exception as e:
+            self.logger.debug(f"_has_open_position error ({symbol}): {e}")
+            return False
+
         positions = positions_data.get("positions", []) if isinstance(positions_data, dict) else []
 
         for pos in positions:
@@ -358,6 +381,27 @@ class TradingViewBridge:
                 except (TypeError, ValueError):
                     continue
         return False
+
+    def _is_symbol_tradeable(self, symbol: str) -> Tuple[bool, str]:
+        """Valida símbolo en Alpaca live para evitar errores repetidos (ej. BNBUSD not found)."""
+        try:
+            client = getattr(self.order_router, "client", None)
+            if not client or getattr(client, "dry_run", True):
+                return True, ""
+
+            live_api = getattr(client, "live_api", None)
+            if not live_api:
+                return True, ""
+
+            asset = live_api.get_asset(symbol)
+            if asset and getattr(asset, "tradable", True):
+                return True, ""
+            return False, f"asset \"{symbol}\" not tradable"
+        except Exception as e:
+            msg = str(e)
+            if "not found" in msg.lower():
+                return False, f"asset \"{symbol}\" not found"
+            return False, msg or f"asset \"{symbol}\" unavailable"
 
     def _in_cooldown(self, symbol: str) -> bool:
         last_ts = self.last_action_ts.get(symbol, 0)
