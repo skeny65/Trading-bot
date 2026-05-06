@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot Manager Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #0a0a0a;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00d4ff;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
+            border: 1px solid #2a2a4a;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #2a2a4a;
+        }
+        
+        .card-title {
+            font-size: 1.2em;
+            color: #00d4ff;
+            font-weight: 600;
+        }
+        
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .metric-positive {
+            color: #00ff88;
+        }
+        
+        .metric-negative {
+            color: #ff4757;
+        }
+        
+        .metric-neutral {
+            color: #ffa502;
+        }
+        
+        .metric-label {
+            color: #888;
+            font-size: 0.9em;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .status-active {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+            border: 1px solid #00ff88;
+        }
+        
+        .status-paused {
+            background: rgba(255, 71, 87, 0.2);
+            color: #ff4757;
+            border: 1px solid #ff4757;
+        }
+        
+        .status-rejected {
+            background: rgba(200, 100, 255, 0.2);
+            color: #c864ff;
+            border: 1px solid #c864ff;
+        }
+        
+        .status-hold {
+            background: rgba(255, 165, 2, 0.2);
+            color: #ffa502;
+            border: 1px solid #ffa502;
+        }
+        
+        .chart-container {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+        }
+        
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .two-thirds {
+            grid-column: span 2;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        th {
+            text-align: left;
+            padding: 12px;
+            color: #00d4ff;
+            border-bottom: 2px solid #2a2a4a;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #1a1a3e;
+        }
+        
+        tr:hover {
+            background: rgba(0, 212, 255, 0.05);
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #1a1a3e;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 30px;
+            border-top: 1px solid #2a2a4a;
+        }
+        
+        .regime-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 8px;
+            border-left: 4px solid #00d4ff;
+        }
+        
+        .regime-icon {
+            font-size: 2em;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .two-thirds {
+                grid-column: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>StrategyFactory Bot Manager</h1>
+        <p class="subtitle">Dashboard de Monitoreo y Decisiones - 2026-05-04</p>
+        
+        <!-- KPIs Principales -->
+        <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Bots Activos</span>
+                    <span class="status-badge status-paused">PAUSADO</span>
+                </div>
+                <div class="metric-value metric-positive">0</div>
+                <div class="metric-label">de 15 bots totales</div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Bots Pausados</span>
+                    <span class="status-badge status-paused">DETENIDO</span>
+                </div>
+                <div class="metric-value metric-negative">0</div>
+                <div class="metric-label">por debajo de umbrales</div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Win Rate Promedio</span>
+                </div>
+                <div class="metric-value metric-neutral">51.2%</div>
+                <div class="metric-label">Umbral: 45% pause / 52% reactivate</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 51.2%; background: #ffa502"></div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Drawdown Maximo</span>
+                </div>
+                <div class="metric-value metric-negative">-24.4%</div>
+                <div class="metric-label">Umbral critico: -20%</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 100%; background: #ff4757"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Regimen de Mercado -->
+        <div class="grid">
+            <div class="card full-width">
+                <div class="card-header">
+                    <span class="card-title">Regimen de Mercado Actual</span>
+                    <span class="status-badge status-active">LIVE</span>
+                </div>
+                <div class="regime-indicator">
+                    <span class="regime-icon">⚡</span>
+                    <div>
+                        <div style="font-size: 1.3em; color: #00d4ff; font-weight: 600;">Volatile</div>
+                        <div style="color: #888; margin-top: 5px;">Confianza: 70.0% | Detectado desde: 2026-05-04</div>
+                    </div>
+                </div>
+                <div id="regime-chart" class="chart-container" style="height: 250px;"></div>
+            </div>
+        </div>
+        
+        <!-- Equity Curves -->
+        <div class="grid">
+            <div class="card two-thirds">
+                <div class="card-header">
+                    <span class="card-title">Equity Curves por Estrategia</span>
+                </div>
+                <div id="equity-chart" class="chart-container"></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Adaptation Score</span>
+                </div>
+                <div id="adaptation-chart" class="chart-container"></div>
+            </div>
+        </div>
+        
+        <!-- Tabla de Decisiones -->
+        <div class="grid">
+            <div class="card full-width">
+                <div class="card-header">
+                    <span class="card-title">Log de Decisiones del Bot Manager</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Bot</th>
+                            <th>WR</th>
+                            <th>DD</th>
+                            <th>PF</th>
+                            <th>Regimen</th>
+                            <th>Veredicto</th>
+                            <th>Razon</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>2026-05-04</td><td><strong>strategy_001</strong></td><td class="metric-negative">44.9%</td><td class="metric-positive">-16.9%</td><td class="metric-negative">1.0</td><td>Volatile</td><td><span class="status-badge status-paused">PAUSE</span></td><td style="color: #888; font-size: 0.9em;">Decision engine verdict: PAUSE</td></tr>
+<tr><td>2026-05-04</td><td><strong>strategy_002</strong></td><td class="metric-positive">55.4%</td><td class="metric-positive">-12.9%</td><td class="metric-negative">1.0</td><td>Volatile</td><td><span class="status-badge status-paused">PAUSE</span></td><td style="color: #888; font-size: 0.9em;">Decision engine verdict: PAUSE</td></tr>
+<tr><td>2026-05-04</td><td><strong>strategy_003</strong></td><td class="metric-negative">43.0%</td><td class="metric-positive">-18.1%</td><td class="metric-negative">1.0</td><td>Volatile</td><td><span class="status-badge status-paused">PAUSE</span></td><td style="color: #888; font-size: 0.9em;">Decision engine verdict: PAUSE</td></tr>
+<tr><td>2026-05-04</td><td><strong>apuesta_b</strong></td><td class="metric-positive">51.4%</td><td class="metric-positive">-16.9%</td><td class="metric-negative">1.0</td><td>Volatile</td><td><span class="status-badge status-paused">PAUSE</span></td><td style="color: #888; font-size: 0.9em;">Decision engine verdict: PAUSE</td></tr>
+<tr><td>2026-05-04</td><td><strong>apuesta_f</strong></td><td class="metric-positive">47.6%</td><td class="metric-positive">-19.8%</td><td class="metric-negative">1.0</td><td>Volatile</td><td><span class="status-badge status-paused">PAUSE</span></td><td style="color: #888; font-size: 0.9em;">Decision engine verdict: PAUSE</td></tr>
+<tr><td>2026-05-04</td><td><strong>apuesta_d</strong></td><td class="metric-negative">42.9%</td><td class="metric-negative">-24.4%</td><td class="metric-negative">1.0</td><td>Volatile</td><td><span class="status-badge status-paused">PAUSE</span></td><td style="color: #888; font-size: 0.9em;">Decision engine verdict: PAUSE</td></tr>
+<tr><td>2026-05-04</td><td><strong>apuesta_a</strong></td><td class="metric-positive">50.4%</td><td class="metric-positive">-12.9%</td><td class="metric-negative">1.0</td><td>Volatile</td><td><span class="status-badge status-paused">PAUSE</span></td><td style="color: #888; font-size: 0.9em;">Decision engine verdict: PAUSE</td></tr>
+<tr><td>2026-05-04</td><td><strong>apuesta_e</strong></td><td class="metric-positive">55.6%</td><td class="metric-positive">-11.9%</td><td class="metric-negative">1.0</td><td>Volatile</td><td><span class="status-badge status-paused">PAUSE</span></td><td style="color: #888; font-size: 0.9em;">Decision engine verdict: PAUSE</td></tr>
+<tr><td>2026-05-04</td><td><strong>apuesta_rg1</strong></td><td class="metric-positive">49.8%</td><td class="metric-negative">-20.3%</td><td class="metric-negative">1.0</td><td>Volatile</td><td><span class="status-badge status-paused">PAUSE</span></td><td style="color: #888; font-size: 0.9em;">Decision engine verdict: PAUSE</td></tr>
+<tr><td>2026-05-04</td><td><strong>apuesta_rg2</strong></td><td class="metric-positive">57.7%</td><td class="metric-positive">-17.3%</td><td class="metric-negative">1.0</td><td>Volatile</td><td><span class="status-badge status-paused">PAUSE</span></td><td style="color: #888; font-size: 0.9em;">Decision engine verdict: PAUSE</td></tr>
+<tr><td>2026-05-04</td><td><strong>apuesta_trend</strong></td><td class="metric-positive">57.9%</td><td class="metric-negative">-20.8%</td><td class="metric-negative">1.0</td><td>Volatile</td><td><span class="status-badge status-paused">PAUSE</span></td><td style="color: #888; font-size: 0.9em;">Decision engine verdict: PAUSE</td></tr>
+<tr><td>2026-05-04</td><td><strong>apuesta_smc</strong></td><td class="metric-positive">50.6%</td><td class="metric-positive">-7.0%</td><td class="metric-negative">1.0</td><td>Volatile</td><td><span class="status-badge status-paused">PAUSE</span></td><td style="color: #888; font-size: 0.9em;">Decision engine verdict: PAUSE</td></tr>
+<tr><td>2026-05-04</td><td><strong>apuesta_eth_reversal_guard_v002</strong></td><td class="metric-positive">56.3%</td><td class="metric-positive">-7.7%</td><td class="metric-negative">1.0</td><td>Volatile</td><td><span class="status-badge status-paused">PAUSE</span></td><td style="color: #888; font-size: 0.9em;">Decision engine verdict: PAUSE</td></tr>
+<tr><td>2026-05-04</td><td><strong>bot2_macro_research</strong></td><td class="metric-positive">47.4%</td><td class="metric-positive">-5.3%</td><td class="metric-negative">1.0</td><td>Volatile</td><td><span class="status-badge status-paused">PAUSE</span></td><td style="color: #888; font-size: 0.9em;">Decision engine verdict: PAUSE</td></tr>
+<tr><td>2026-05-04</td><td><strong>apuesta_rg3</strong></td><td class="metric-positive">57.8%</td><td class="metric-positive">-8.7%</td><td class="metric-negative">1.0</td><td>Volatile</td><td><span class="status-badge status-paused">PAUSE</span></td><td style="color: #888; font-size: 0.9em;">Decision engine verdict: PAUSE</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Metricas Comparativas -->
+        <div class="grid">
+            <div class="card two-thirds">
+                <div class="card-header">
+                    <span class="card-title">Metricas por Estrategia</span>
+                </div>
+                <div id="metrics-chart" class="chart-container"></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Regret Rate (Hindsight)</span>
+                </div>
+                <div id="regret-chart" class="chart-container"></div>
+            </div>
+        </div>
+
+        <!-- Historial del Dashboard -->
+        <div class="grid">
+            <div class="card full-width">
+                <div class="card-header">
+                    <span class="card-title">Historial del Dashboard</span>
+                    <span style="color: #888; font-size: 0.85em;">Actualiza cada 5 min</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px;">
+                    <div>
+                        <div class="metric-label">Días registrados</div>
+                        <div class="metric-value metric-neutral" style="font-size: 1.4em;">30</div>
+                    </div>
+                    <div>
+                        <div class="metric-label">WR promedio 7d</div>
+                        <div class="metric-value metric-positive" style="font-size: 1.4em;">50.64%</div>
+                    </div>
+                    <div>
+                        <div class="metric-label">WR promedio 30d</div>
+                        <div class="metric-value metric-positive" style="font-size: 1.4em;">50.64%</div>
+                    </div>
+                    <div>
+                        <div class="metric-label">DD promedio 7d</div>
+                        <div class="metric-value metric-negative" style="font-size: 1.4em;">-24.54%</div>
+                    </div>
+                    <div>
+                        <div class="metric-label">DD promedio 30d</div>
+                        <div class="metric-value metric-negative" style="font-size: 1.4em;">-24.54%</div>
+                    </div>
+                </div>
+                <div id="history-chart" class="chart-container" style="height: 320px;"></div>
+            </div>
+        </div>
+
+        <!-- Configuración de Logs -->
+        <div class="grid">
+            <div class="card full-width">
+                <div class="card-header">
+                    <span class="card-title">Configuración Unificada de Logs</span>
+                    <span class="status-badge status-active">MONITOR</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Archivo</th>
+                            <th>Tipo</th>
+                            <th>Uso</th>
+                            <th>Cuándo se escribe</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>logs/bot.log</td><td>técnico</td><td>eventos generales del bot</td><td>siempre</td><td><span class="status-badge status-active">OK</span></td></tr>
+<tr><td>logs/apuesta/webhook_server.log</td><td>técnico</td><td>eventos webhook de TradingView</td><td>siempre</td><td><span class="status-badge status-active">OK</span></td></tr>
+<tr><td>logs/apuesta/trades_log.txt</td><td>evento</td><td>signal/skip/order/close/error</td><td>por webhook TV</td><td><span class="status-badge status-active">OK</span></td></tr>
+<tr><td>data/apuesta/trades_report.csv</td><td>csv</td><td>operaciones de TradingView (OPEN/WIN/LOSS)</td><td>entry/close</td><td><span class="status-badge status-active">OK</span></td></tr>
+<tr><td>data/apuesta/paper_signals.csv</td><td>csv</td><td>todas las alertas TV</td><td>cada alerta</td><td><span class="status-badge status-active">OK</span></td></tr>
+<tr><td>data/apuesta/paper_resolved.csv</td><td>csv</td><td>paper resuelto</td><td>cuando se resuelve</td><td><span class="status-badge status-active">OK</span></td></tr>
+<tr><td>data/trades/*.jsonl</td><td>jsonl</td><td>operaciones/rechazos de rutinas</td><td>por webhook rutina/github</td><td><span class="status-badge status-active">OK</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Operaciones Recientes -->
+        <div class="grid">
+            <div class="card full-width">
+                <div class="card-header">
+                    <span class="card-title">Operaciones Recientes (Routines + TradingView)</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px;">
+                    <div>
+                        <div class="metric-label">Total registradas</div>
+                        <div class="metric-value metric-neutral" style="font-size: 1.3em;">40</div>
+                    </div>
+                    <div>
+                        <div class="metric-label">WIN</div>
+                        <div class="metric-value metric-positive" style="font-size: 1.3em;">0</div>
+                    </div>
+                    <div>
+                        <div class="metric-label">LOSS</div>
+                        <div class="metric-value metric-negative" style="font-size: 1.3em;">0</div>
+                    </div>
+                    <div>
+                        <div class="metric-label">OPEN/Pending</div>
+                        <div class="metric-value metric-neutral" style="font-size: 1.3em;">9</div>
+                    </div>
+                    <div>
+                        <div class="metric-label">Rechazadas</div>
+                        <div class="metric-value" style="font-size: 1.3em; color: #c864ff;">2</div>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Hora</th>
+                            <th>Fuente</th>
+                            <th>Divisa</th>
+                            <th>Setup/Estrategia</th>
+                            <th>Side</th>
+                            <th>Qty</th>
+                            <th>Entry</th>
+                            <th>SL</th>
+                            <th>TP</th>
+                            <th>Close</th>
+                            <th>PnL</th>
+                            <th>Outcome</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>2026-05-05T09:06:53.022198</td><td>tradingview</td><td><strong>SOLUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.116659</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-05T08:47:54.079321</td><td>tradingview</td><td><strong>ETHUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.004178</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-04T23:49:56.792627</td><td>tradingview</td><td><strong>SOLUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.117897</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-04T23:26:55.451792</td><td>tradingview</td><td><strong>SOLUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.117813</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-04T22:57:55.705745</td><td>tradingview</td><td><strong>SOLUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.117925</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-04T22:13:55.444193</td><td>tradingview</td><td><strong>SOLUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.118189</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-04T21:04:57.226083</td><td>tradingview</td><td><strong>ETHUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.004216</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-04T20:36:55.900452</td><td>tradingview</td><td><strong>ETHUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.004233</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-04T08:45:57.510864</td><td>tradingview</td><td><strong>SOLUSD</strong></td><td>apuesta_rg3</td><td>SELL</td><td>0.11892</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-04T07:01:56.106465</td><td>tradingview</td><td><strong>ETHUSD</strong></td><td>apuesta_rg3</td><td>SELL</td><td>0.004286</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-04T05:02:57.715883</td><td>tradingview</td><td><strong>ETHUSD</strong></td><td>apuesta_rg3</td><td>SELL</td><td>0.004241</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-04T03:01:56.612766</td><td>tradingview</td><td><strong>SOLUSD</strong></td><td>apuesta_rg3</td><td>SELL</td><td>0.117869</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-04T02:48:55.815736</td><td>tradingview</td><td><strong>ETHUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.004222</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-03T22:48:55.822026</td><td>tradingview</td><td><strong>ETHUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.004194</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-03T22:30:55.980841</td><td>tradingview</td><td><strong>ETHUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.004196</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-03T22:07:56.927207</td><td>tradingview</td><td><strong>SOLUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.117096</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-03T20:30:56.677354</td><td>tradingview</td><td><strong>SOLUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.119076</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-03T17:00:57.193127</td><td>tradingview</td><td><strong>SOLUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.118568</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-03T16:11:57.147752</td><td>tradingview</td><td><strong>SOLUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.118413</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-03T16:11:55.946245</td><td>tradingview</td><td><strong>ETHUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.004287</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-03T15:25:55.955080</td><td>tradingview</td><td><strong>ETHUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.004282</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-03T12:12:56.386748</td><td>tradingview</td><td><strong>SOLUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.118793</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-03T07:03:56.365334</td><td>tradingview</td><td><strong>SOLUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.118948</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-02T17:50:56.681893</td><td>tradingview</td><td><strong>SOLUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.118554</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-05-01T19:51:03.294901</td><td>routine</td><td><strong></strong></td><td>-</td><td>-</td><td>-</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-rejected">REJECTED</span></td></tr>
+<tr><td>2026-05-01T19:41:04.653069</td><td>routine</td><td><strong></strong></td><td>-</td><td>-</td><td>-</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-rejected">REJECTED</span></td></tr>
+<tr><td>2026-05-01T19:39:57.395686</td><td>tradingview</td><td><strong>SOLUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.119503</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-04-30T21:47:58.471028</td><td>tradingview</td><td><strong>SOLUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.119489</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-04-29T02:31:58.785723</td><td>tradingview</td><td><strong>ETHUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.004293</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-04-29T02:15:02.788447</td><td>tradingview</td><td><strong>ETHUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.004298</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td>2026-04-29T01:05:59.272953</td><td>tradingview</td><td><strong>SOLUSD</strong></td><td>apuesta_rg3</td><td>BUY</td><td>0.117661</td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-active">FILLED</span></td></tr>
+<tr><td></td><td>tradingview</td><td><strong></strong></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-hold">OPEN</span></td></tr>
+<tr><td></td><td>tradingview</td><td><strong></strong></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-hold">OPEN</span></td></tr>
+<tr><td></td><td>tradingview</td><td><strong></strong></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-hold">OPEN</span></td></tr>
+<tr><td></td><td>tradingview</td><td><strong></strong></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-hold">OPEN</span></td></tr>
+<tr><td></td><td>tradingview</td><td><strong></strong></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-hold">OPEN</span></td></tr>
+<tr><td></td><td>tradingview</td><td><strong></strong></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-hold">OPEN</span></td></tr>
+<tr><td></td><td>tradingview</td><td><strong></strong></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-hold">OPEN</span></td></tr>
+<tr><td></td><td>tradingview</td><td><strong></strong></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-hold">OPEN</span></td></tr>
+<tr><td></td><td>tradingview</td><td><strong></strong></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td><span class="status-badge status-hold">OPEN</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Señales TradingView (paper_signals.csv) -->
+        <div class="grid">
+            <div class="card full-width">
+                <div class="card-header">
+                    <span class="card-title">Señales TradingView &mdash; Todas las alertas recibidas</span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px;">
+                    <div><div class="metric-label">Total alertas</div><div class="metric-value metric-neutral" style="font-size:1.3em;">29</div></div>
+                    <div><div class="metric-label">Ejecutadas</div><div class="metric-value metric-positive" style="font-size:1.3em;">29</div></div>
+                    <div><div class="metric-label">Solo registradas</div><div class="metric-value metric-neutral" style="font-size:1.3em;">0</div></div>
+                </div>
+                <table>
+                    <thead><tr>
+                        <th>Hora</th><th>Divisa</th><th>Setup</th><th>Side</th>
+                        <th>Entry</th><th>SL</th><th>TP</th><th>Ejecutada</th><th>Nota</th>
+                    </tr></thead>
+                    <tbody><tr><td>2026-05-05 14:06:53</td><td><strong>SOLUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>85.72</td><td>85.4628</td><td>86.1057</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-05 13:47:54</td><td><strong>ETHUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>2393.45</td><td>2386.2696</td><td>2404.2205</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-05 04:49:56</td><td><strong>SOLUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>84.82</td><td>84.5655</td><td>85.2017</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-05 04:26:55</td><td><strong>SOLUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>84.88</td><td>84.6254</td><td>85.262</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-05 03:57:55</td><td><strong>SOLUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>84.8</td><td>84.5456</td><td>85.1816</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-05 03:13:55</td><td><strong>SOLUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>84.61</td><td>84.3562</td><td>84.9907</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-05 02:04:57</td><td><strong>ETHUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>2372.13</td><td>2365.0136</td><td>2382.8046</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-05 01:36:55</td><td><strong>ETHUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>2362.15</td><td>2355.0636</td><td>2372.7797</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-04 13:45:57</td><td><strong>SOLUSD</strong></td><td>RG3</td><td style='color:#ff4757;font-weight:bold;'>SELL</td><td>84.09</td><td>84.3423</td><td>83.7116</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-04 12:01:56</td><td><strong>ETHUSD</strong></td><td>RG3</td><td style='color:#ff4757;font-weight:bold;'>SELL</td><td>2333.26</td><td>2340.2598</td><td>2322.7603</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-04 10:02:57</td><td><strong>ETHUSD</strong></td><td>RG3</td><td style='color:#ff4757;font-weight:bold;'>SELL</td><td>2357.96</td><td>2365.0339</td><td>2347.3492</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-04 08:01:56</td><td><strong>SOLUSD</strong></td><td>RG3</td><td style='color:#ff4757;font-weight:bold;'>SELL</td><td>84.84</td><td>85.0945</td><td>84.4582</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-04 07:48:55</td><td><strong>ETHUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>2368.45</td><td>2361.3447</td><td>2379.108</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-04 03:48:55</td><td><strong>ETHUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>2384.51</td><td>2377.3565</td><td>2395.2403</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-04 03:30:55</td><td><strong>ETHUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>2382.98</td><td>2375.8311</td><td>2393.7034</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-04 03:07:56</td><td><strong>SOLUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>85.4</td><td>85.1438</td><td>85.7843</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-04 01:30:56</td><td><strong>SOLUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>83.98</td><td>83.7281</td><td>84.3579</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-03 22:00:57</td><td><strong>SOLUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>84.34</td><td>84.087</td><td>84.7195</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-03 21:11:57</td><td><strong>SOLUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>84.45</td><td>84.1967</td><td>84.83</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-03 21:11:55</td><td><strong>ETHUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>2332.59</td><td>2325.5922</td><td>2343.0867</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-03 20:25:55</td><td><strong>ETHUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>2335.58</td><td>2328.5733</td><td>2346.0901</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-03 17:12:56</td><td><strong>SOLUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>84.18</td><td>83.9275</td><td>84.5588</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-03 12:03:56</td><td><strong>SOLUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>84.07</td><td>83.8178</td><td>84.4483</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-02 22:50:56</td><td><strong>SOLUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>84.35</td><td>84.097</td><td>84.7296</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-02 00:39:57</td><td><strong>SOLUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>83.68</td><td>83.429</td><td>84.0566</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-05-01 02:47:58</td><td><strong>SOLUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>83.69</td><td>83.4389</td><td>84.0666</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-04-29 07:31:58</td><td><strong>ETHUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>2329.21</td><td>2322.2224</td><td>2339.6914</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-04-29 07:15:02</td><td><strong>ETHUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>2326.65</td><td>2319.6701</td><td>2337.1199</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr>
+<tr><td>2026-04-29 06:05:59</td><td><strong>SOLUSD</strong></td><td>RG3</td><td style='color:#00ff88;font-weight:bold;'>BUY</td><td>84.99</td><td>84.735</td><td>85.3725</td><td><span class="status-badge status-active">SÍ</span></td><td style='font-size:0.8em;color:#888;'></td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="footer">
+            Generado el 04/05/2026 10:00:06 | Bot Manager v1.0 | Datos en tiempo real desde Alpaca
+            &nbsp;&mdash;&nbsp; Próxima actualización en <span id="refresh-countdown">5:00</span>
+        </div>
+    </div>
+    
+    <script>
+        // Equity Curves Chart
+        var equityData = [{"x": ["2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05"], "y": [10020.902328979153, 10008.387789389011, 10071.30276111654, 10096.954691512126, 10054.899603469425, 10048.490633533647, 10066.460040710832, 10063.044290686143, 10015.70226822858, 10014.961091625571, 9985.618309309784, 10021.149756494082, 10071.423421290667, 10061.908002709763, 10087.080879370807, 10069.100251578526, 10046.077255338518, 10011.92549322931, 10046.670574962931, 10010.674040489354, 10014.497057642286, 10012.053346558567, 10015.696929144855, 10065.361094963822, 10082.289110497812, 10073.576494215913, 10070.598412093896, 10072.955835821933, 10115.898351612042, 10070.994682478618], "type": "scatter", "mode": "lines", "name": "strategy_001 (PAUSE)", "line": {"color": "#00d4ff", "width": 2}, "hovertemplate": "<b>strategy_001</b><br>Fecha: %{x}<br>Equity: $%{y:,.0f}<br>Status: PAUSE<extra></extra>"}, {"x": ["2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05"], "y": [9980.894696892978, 9996.881545020029, 9988.512455317423, 9998.585951629644, 9973.317658650261, 9996.135629229086, 10000.918040348019, 10014.871489839332, 10029.639059907711, 10043.4330786379, 10035.2115330517, 10038.10951808198, 10045.893906348578, 10088.898987990071, 10095.877904981862, 10116.208192025464, 10133.016046114279, 10106.588419495745, 10114.383416181487, 10099.040340704982, 10108.331681351181, 10093.718658649821, 10066.693616781948, 10071.627843839387, 10037.210210874564, 10052.94238516939, 10037.416934263592, 9999.713059067833, 9994.055556322466, 10018.65606569212], "type": "scatter", "mode": "lines", "name": "strategy_002 (PAUSE)", "line": {"color": "#00ff88", "width": 2}, "hovertemplate": "<b>strategy_002</b><br>Fecha: %{x}<br>Equity: $%{y:,.0f}<br>Status: PAUSE<extra></extra>"}, {"x": ["2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05"], "y": [9998.487327704841, 9998.316238661942, 10032.586761018421, 10050.903993438027, 10015.024979439873, 10001.837877638136, 9965.721719238267, 9955.817832494604, 9982.036456791737, 9952.157317731368, 9917.49426121446, 9912.562970302288, 9955.136292751167, 9928.741191511945, 9851.141280419795, 9799.631916774779, 9779.476976439546, 9740.283334820939, 9728.586563427187, 9673.543518216082, 9709.820381587975, 9720.455995121905, 9714.727632415283, 9674.834574878763, 9628.008839966802, 9636.355800762925, 9628.83032480288, 9579.624047333717, 9535.103935786354, 9532.80346089603], "type": "scatter", "mode": "lines", "name": "strategy_003 (PAUSE)", "line": {"color": "#ff4757", "width": 2}, "hovertemplate": "<b>strategy_003</b><br>Fecha: %{x}<br>Equity: $%{y:,.0f}<br>Status: PAUSE<extra></extra>"}, {"x": ["2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05"], "y": [9988.39360037906, 9979.440489174443, 9949.765176652563, 9950.305075327362, 9979.309325299137, 9996.982630438008, 10003.538804200425, 10013.728258369065, 9978.693369921759, 9981.711614859365, 9988.38566941614, 9967.902276236047, 9951.936083325249, 9913.436675232057, 9940.770289491154, 9925.492881142862, 9943.540356092491, 9891.883975784503, 9929.828292362748, 9884.428835095208, 9942.404891535863, 9985.864803392262, 9976.703427886652, 10033.509023636612, 10001.110569337612, 9978.199228180898, 9976.526227543527, 10006.304751445916, 9990.827444897053, 9993.126258787928], "type": "scatter", "mode": "lines", "name": "apuesta_b (PAUSE)", "line": {"color": "#ffa502", "width": 2}, "hovertemplate": "<b>apuesta_b</b><br>Fecha: %{x}<br>Equity: $%{y:,.0f}<br>Status: PAUSE<extra></extra>"}, {"x": ["2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05"], "y": [10016.855279622292, 9995.272033156212, 9984.153069264186, 9981.534396366465, 9985.498286355472, 9963.881550501012, 10032.759060421384, 10043.48688669485, 10057.384872820134, 10029.611801336001, 10021.666482249739, 9997.496611016697, 9960.876397464868, 9981.16762345193, 10040.404567481426, 10005.037306187507, 9976.558275289997, 9945.123381600433, 9943.829218921272, 9908.106857481713, 9832.025225038655, 9824.025527468026, 9784.184540655691, 9772.651776099681, 9774.253436784353, 9771.474723028206, 9773.595633700586, 9831.732174706234, 9794.32198447159, 9795.257946735157], "type": "scatter", "mode": "lines", "name": "apuesta_f (PAUSE)", "line": {"color": "#00d4ff", "width": 2}, "hovertemplate": "<b>apuesta_f</b><br>Fecha: %{x}<br>Equity: $%{y:,.0f}<br>Status: PAUSE<extra></extra>"}, {"x": ["2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05"], "y": [9973.017242085054, 9980.66383415614, 9947.417947432568, 9941.591484922812, 9924.560283361416, 9924.53701444333, 9906.892386414946, 9899.816351344272, 9898.243047982203, 9876.832072980415, 9918.221261762157, 9939.078454551194, 9929.447920973209, 9915.156816972782, 9897.968302676614, 9847.799364447985, 9848.858471276912, 9861.018112531323, 9847.289558817902, 9854.67845246904, 9817.805688651366, 9793.580552689873, 9765.731668818367, 9783.208791191557, 9792.431949648431, 9821.524609941336, 9811.24092590493, 9827.916189616786, 9812.679857712994, 9823.935309896122], "type": "scatter", "mode": "lines", "name": "apuesta_d (PAUSE)", "line": {"color": "#00ff88", "width": 2}, "hovertemplate": "<b>apuesta_d</b><br>Fecha: %{x}<br>Equity: $%{y:,.0f}<br>Status: PAUSE<extra></extra>"}, {"x": ["2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05"], "y": [9999.553835585644, 9979.005392998168, 9990.29291109346, 10009.124032514497, 10019.986821086208, 10070.29458530603, 10046.094509661552, 10061.859753603161, 10043.494582302264, 10049.650098041237, 10036.713822744743, 10025.74393359579, 10014.324688479344, 10002.581247059175, 9978.332642012987, 9992.99905120701, 9983.850271318151, 10013.341905751326, 10006.822025753921, 10037.662845186534, 10057.673888008323, 10032.337077856424, 10043.660903412801, 10029.682728718459, 10089.761346008885, 10088.968103632607, 10046.457322149075, 10032.45434517865, 10009.845663315704, 9994.805437620878], "type": "scatter", "mode": "lines", "name": "apuesta_a (PAUSE)", "line": {"color": "#ff4757", "width": 2}, "hovertemplate": "<b>apuesta_a</b><br>Fecha: %{x}<br>Equity: $%{y:,.0f}<br>Status: PAUSE<extra></extra>"}, {"x": ["2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05"], "y": [10008.830423513038, 10025.977072226395, 10034.244037112543, 10034.549248527224, 10039.338112482852, 9995.848884567624, 10030.567115380909, 9976.011402016087, 9990.06818052581, 10024.828926244185, 9995.660874003688, 9994.990718027146, 9976.414082568, 9976.342530251104, 10021.385135969742, 10061.248061762079, 10089.36228615216, 10065.958250806832, 10076.072088282546, 10083.544778651485, 10075.243986218718, 10102.44784436435, 10091.324039166371, 10071.09100949907, 10098.415315734652, 10084.845646677812, 10118.962409185748, 10087.036183029279, 10143.325887584191, 10176.256449637704], "type": "scatter", "mode": "lines", "name": "apuesta_e (PAUSE)", "line": {"color": "#ffa502", "width": 2}, "hovertemplate": "<b>apuesta_e</b><br>Fecha: %{x}<br>Equity: $%{y:,.0f}<br>Status: PAUSE<extra></extra>"}, {"x": ["2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05"], "y": [9946.98108303215, 9981.306648981643, 9973.476600422115, 10000.480146849295, 10044.459357786385, 10015.80417651666, 9989.541601964698, 9963.19371680527, 9956.993745934553, 9890.532459028213, 9869.902368901334, 9836.539448431362, 9840.314576941011, 9854.143517380144, 9862.234336412896, 9836.031348401044, 9887.065108024777, 9875.591411720046, 9895.687880015194, 9901.69009323136, 9935.008277412548, 9878.83260197319, 9931.890224428922, 9962.720862606428, 9985.145035594827, 9978.713248730919, 9959.382362785132, 9952.002660516686, 9942.937566103094, 9921.8518204068], "type": "scatter", "mode": "lines", "name": "apuesta_rg1 (PAUSE)", "line": {"color": "#00d4ff", "width": 2}, "hovertemplate": "<b>apuesta_rg1</b><br>Fecha: %{x}<br>Equity: $%{y:,.0f}<br>Status: PAUSE<extra></extra>"}, {"x": ["2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05"], "y": [10025.95322222894, 10062.89356256445, 10041.116487959813, 10102.084591506842, 10117.80211979909, 10133.83303970058, 10147.237094216282, 10134.872188327377, 10162.930420229985, 10174.405168497533, 10159.005754708316, 10131.185205482014, 10181.685794890274, 10195.08080929457, 10207.334301912808, 10238.32614560585, 10265.651622396386, 10253.724125189243, 10302.786381337211, 10344.921100678981, 10387.431279712539, 10386.928529091565, 10381.589143099967, 10365.352005823614, 10362.362186736933, 10363.958081458635, 10356.8737969308, 10343.773235357658, 10358.394800312686, 10343.819385666522], "type": "scatter", "mode": "lines", "name": "apuesta_rg2 (PAUSE)", "line": {"color": "#00ff88", "width": 2}, "hovertemplate": "<b>apuesta_rg2</b><br>Fecha: %{x}<br>Equity: $%{y:,.0f}<br>Status: PAUSE<extra></extra>"}, {"x": ["2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05"], "y": [10031.107409330734, 9996.296138859185, 9982.832863364929, 9981.090087300145, 9997.416575039299, 9965.391054473517, 10068.987058631696, 10077.14297811207, 10062.192389271764, 10018.575276731017, 10004.254637621361, 10006.401357237497, 10013.12119324197, 10043.804555745832, 10059.393024363828, 10092.063145322394, 10112.262251688575, 10080.996960609244, 10088.14778718662, 10142.178259805214, 10121.883638725429, 10134.388576041492, 10158.855545328235, 10186.809945341369, 10254.674881055143, 10257.075285545834, 10257.588390010089, 10252.749537713313, 10303.718581367752, 10348.956457267184], "type": "scatter", "mode": "lines", "name": "apuesta_trend (PAUSE)", "line": {"color": "#ff4757", "width": 2}, "hovertemplate": "<b>apuesta_trend</b><br>Fecha: %{x}<br>Equity: $%{y:,.0f}<br>Status: PAUSE<extra></extra>"}, {"x": ["2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05"], "y": [10018.353495904055, 10003.723125785962, 9974.805648239155, 9960.123819195698, 9944.262426869736, 9977.628984366605, 9986.215835430603, 9972.461643135892, 9970.320450964158, 9964.136615506153, 9933.718037747176, 9927.895096633314, 9972.475887108027, 9950.655617289887, 9970.771013103575, 9927.739732290378, 9961.072696278945, 9958.799704750409, 9966.048842935268, 10009.859848825365, 10011.144281731516, 10016.357350799852, 10081.080775955594, 10027.93042058697, 10055.358727603483, 10016.614974125254, 9988.087009765484, 10016.254991284328, 10024.625988389605, 10067.522395497686], "type": "scatter", "mode": "lines", "name": "apuesta_smc (PAUSE)", "line": {"color": "#ffa502", "width": 2}, "hovertemplate": "<b>apuesta_smc</b><br>Fecha: %{x}<br>Equity: $%{y:,.0f}<br>Status: PAUSE<extra></extra>"}, {"x": ["2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05"], "y": [9985.30583511171, 10008.950078001946, 9982.889601416135, 10038.154541866961, 10022.629060422492, 10034.838830668283, 10016.717361310652, 10025.631791005497, 10036.893488023581, 10053.878239736105, 10070.967151680676, 10035.20870594987, 10049.36944782059, 10050.42549448326, 10070.112372158274, 10041.595203261473, 10083.795848089987, 10115.730898182797, 10121.113453447811, 10123.918032082966, 10121.097259333303, 10143.17783942623, 10111.310112093239, 10125.454584507483, 10065.158308186205, 10077.754365448038, 10063.38961477168, 10099.66760131447, 10081.434091619294, 10059.746332292181], "type": "scatter", "mode": "lines", "name": "apuesta_eth_reversal_guard_v002 (PAUSE)", "line": {"color": "#00d4ff", "width": 2}, "hovertemplate": "<b>apuesta_eth_reversal_guard_v002</b><br>Fecha: %{x}<br>Equity: $%{y:,.0f}<br>Status: PAUSE<extra></extra>"}, {"x": ["2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05"], "y": [9992.059532505213, 9947.206861265351, 9957.822451639446, 9980.651667001466, 10001.859622362459, 9977.966102982708, 10018.677256575502, 10002.864690382105, 10003.540892801062, 10047.049731336323, 10029.563156447144, 10028.977146379317, 10011.044504400345, 10003.613291662867, 10010.103339652183, 10026.381504197203, 9983.98151529209, 10004.67469746384, 10049.923709573404, 9994.052617819289, 10032.024561837443, 10004.448140975628, 9968.426883150847, 9954.340023026756, 9888.650708985197, 9903.724057092939, 9887.571358878156, 9905.997487387873, 9928.05995633977, 9947.561703402773], "type": "scatter", "mode": "lines", "name": "bot2_macro_research (PAUSE)", "line": {"color": "#00ff88", "width": 2}, "hovertemplate": "<b>bot2_macro_research</b><br>Fecha: %{x}<br>Equity: $%{y:,.0f}<br>Status: PAUSE<extra></extra>"}, {"x": ["2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05"], "y": [9962.039728772466, 9975.691242526633, 9997.8481416804, 9961.71895341742, 9929.880191640594, 9895.071901853444, 9899.04230265738, 9930.565341941208, 9921.258310844094, 9905.555599714451, 9916.628242257939, 9935.687615751905, 9902.729387146705, 9891.366082314633, 9867.006099650169, 9838.5255208136, 9798.103166485695, 9792.833713185528, 9787.648133050527, 9799.118567604432, 9764.142726592085, 9778.697638433703, 9764.11213659457, 9806.53463965511, 9781.81694345616, 9794.006478823803, 9821.083439836579, 9805.815562602058, 9776.774326129955, 9781.073558312892], "type": "scatter", "mode": "lines", "name": "apuesta_rg3 (PAUSE)", "line": {"color": "#ff4757", "width": 2}, "hovertemplate": "<b>apuesta_rg3</b><br>Fecha: %{x}<br>Equity: $%{y:,.0f}<br>Status: PAUSE<extra></extra>"}];
+        var equityLayout = {
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: {color: '#e0e0e0'},
+            xaxis: {gridcolor: '#2a2a4a', title: 'Fecha'},
+            yaxis: {gridcolor: '#2a2a4a', title: 'Equity ($)'},
+            legend: {orientation: 'h', y: -0.2},
+            margin: {t: 30, b: 60}
+        };
+        Plotly.newPlot('equity-chart', equityData, equityLayout, {responsive: true});
+        
+        // Adaptation Score Chart
+        var adaptData = [{"type": "indicator", "mode": "gauge+number", "value": 50.0, "title": {"text": "Score", "font": {"color": "#e0e0e0"}}, "gauge": {"axis": {"range": [0, 100], "tickcolor": "#e0e0e0"}, "bar": {"color": "#00d4ff"}, "bgcolor": "#1a1a3e", "borderwidth": 2, "bordercolor": "#2a2a4a", "steps": [{"range": [0, 40], "color": "rgba(255, 71, 87, 0.3)"}, {"range": [40, 70], "color": "rgba(255, 165, 2, 0.3)"}, {"range": [70, 100], "color": "rgba(0, 255, 136, 0.3)"}], "threshold": {"line": {"color": "white", "width": 4}, "thickness": 0.75, "value": 70}}, "number": {"font": {"color": "#e0e0e0", "size": 40}}}];
+        var adaptLayout = {
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: {color: '#e0e0e0'},
+            xaxis: {gridcolor: '#2a2a4a'},
+            yaxis: {gridcolor: '#2a2a4a', range: [0, 100]},
+            showlegend: false,
+            margin: {t: 30, b: 40}
+        };
+        Plotly.newPlot('adaptation-chart', adaptData, adaptLayout, {responsive: true});
+        
+        // Regime Probabilities Chart
+        var regimeData = [{"x": ["2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05"], "y": [0.6120839641764126, 0.742354624719374, 0.7069995775513757, 0.8484703309376798, 0.7652437632641071, 0.668417841237479, 0.6497512820941127, 0.6251614431186033, 0.7893234969756814, 0.8548941170386768, 0.8865505122602749, 0.8345593374653347, 0.6597501859030674, 0.6213728846056219, 0.650927515143209, 0.8752730481872815, 0.7587603005241894, 0.8193648663662036, 0.8559466046225743, 0.8529895436001043, 0.7102514449163243, 0.6231257522235434, 0.730361973734788, 0.8431923155644885, 0.6089370013155891, 0.8229616338356228, 0.8363455847047752, 0.7228593547808788, 0.6055662328694602, 0.6751288487131774], "type": "scatter", "mode": "lines", "stackgroup": "one", "name": "Volatile", "fill": "tonexty", "line": {"width": 0.5}, "fillcolor": "#888"}];
+        var regimeLayout = {
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: {color: '#e0e0e0'},
+            xaxis: {gridcolor: '#2a2a4a'},
+            yaxis: {gridcolor: '#2a2a4a', range: [0, 1]},
+            legend: {orientation: 'h', y: -0.3},
+            margin: {t: 30, b: 60}
+        };
+        Plotly.newPlot('regime-chart', regimeData, regimeLayout, {responsive: true});
+        
+        // Metrics Radar/Bar Chart
+        var metricsData = [{"x": ["strategy_001", "strategy_002", "strategy_003", "apuesta_b", "apuesta_f", "apuesta_d", "apuesta_a", "apuesta_e", "apuesta_rg1", "apuesta_rg2", "apuesta_trend", "apuesta_smc", "apuesta_eth_reversal_guard_v002", "bot2_macro_research", "apuesta_rg3"], "y": [44.87, 55.4, 43.0, 51.36, 47.57, 42.88, 50.42, 55.64, 49.75, 57.73, 57.9, 50.62, 56.34, 47.44, 57.77], "type": "bar", "name": "Win Rate %", "marker": {"color": "#00d4ff"}}, {"x": ["strategy_001", "strategy_002", "strategy_003", "apuesta_b", "apuesta_f", "apuesta_d", "apuesta_a", "apuesta_e", "apuesta_rg1", "apuesta_rg2", "apuesta_trend", "apuesta_smc", "apuesta_eth_reversal_guard_v002", "bot2_macro_research", "apuesta_rg3"], "y": [16.94, 12.93, 18.15, 16.85, 19.85, 24.43, 12.87, 11.89, 20.29, 17.35, 20.82, 6.97, 7.66, 5.33, 8.69], "type": "bar", "name": "Drawdown %", "marker": {"color": "#ff4757"}}, {"x": ["strategy_001", "strategy_002", "strategy_003", "apuesta_b", "apuesta_f", "apuesta_d", "apuesta_a", "apuesta_e", "apuesta_rg1", "apuesta_rg2", "apuesta_trend", "apuesta_smc", "apuesta_eth_reversal_guard_v002", "bot2_macro_research", "apuesta_rg3"], "y": [20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0], "type": "bar", "name": "PF (x20)", "marker": {"color": "#00ff88"}}];
+        var metricsLayout = {
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: {color: '#e0e0e0'},
+            xaxis: {gridcolor: '#2a2a4a'},
+            yaxis: {gridcolor: '#2a2a4a'},
+            barmode: 'group',
+            legend: {orientation: 'h', y: -0.2},
+            margin: {t: 30, b: 60}
+        };
+        Plotly.newPlot('metrics-chart', metricsData, metricsLayout, {responsive: true});
+        
+        // Regret Rate Chart
+        var regretData = [{"x": ["2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-04", "2026-05-05"], "y": [1.7514388435125343, 4.572516403011363, 6.532426117582585, 7.623921635870181, 8.231421051026121, 7.576726789370545, 7.009418279526372, 8.336210954458423, 7.129538029552062, 6.423203106293288, 6.2534165851256605, 7.659572415047249, 6.243479226836864, 6.836866731362685, 7.728476797768888, 7.193123676258363, 8.470586502575136, 12.944932993791362, 10.702295371231429, 9.30030846957386, 5.584534340212589, 5.228232806230536, 6.3512484788749335, 5.557759817530114, 6.933811873986752, 7.931779830996224, 12.705175127042125, 18.0827378993405, 17.300753690620578, 17.346470478558345], "type": "scatter", "mode": "lines+markers", "name": "Regret Rate", "line": {"color": "#ffa502", "width": 2}, "marker": {"size": 6, "color": "#ffa502"}, "fill": "tozeroy", "fillcolor": "rgba(255, 165, 2, 0.1)"}];
+        var regretLayout = {
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: {color: '#e0e0e0'},
+            xaxis: {gridcolor: '#2a2a4a'},
+            yaxis: {gridcolor: '#2a2a4a', title: 'Regret Rate (%)'},
+            showlegend: false,
+            margin: {t: 30, b: 40}
+        };
+        Plotly.newPlot('regret-chart', regretData, regretLayout, {responsive: true});
+
+        // History chart
+        var historyData = [{"x": ["2026-04-29", "2026-04-29", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-03", "2026-05-03", "2026-05-03", "2026-05-03", "2026-05-03", "2026-05-03", "2026-05-03", "2026-05-03", "2026-05-03", "2026-05-04", "2026-05-04", "2026-05-04", "2026-05-04", "2026-05-04", "2026-05-04", "2026-05-04", "2026-05-04", "2026-05-04", "2026-05-04", "2026-05-04", "2026-05-04", "2026-05-05", "2026-05-05"], "y": [50.4, 50.4, 50.4, 50.4, 50.4, 50.4, 50.4, 50.4, 50.4, 50.4, 50.4, 50.4, 50.4, 50.4, 50.4, 50.4, 50.4, 50.4, 50.4, 50.4, 50.4, 51.2, 51.2, 51.2, 51.2, 51.2, 51.2, 51.2, 51.2, 51.2], "type": "scatter", "mode": "lines+markers", "name": "WR Avg", "line": {"color": "#00d4ff", "width": 2}}, {"x": ["2026-04-29", "2026-04-29", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02", "2026-05-03", "2026-05-03", "2026-05-03", "2026-05-03", "2026-05-03", "2026-05-03", "2026-05-03", "2026-05-03", "2026-05-03", "2026-05-03", "2026-05-04", "2026-05-04", "2026-05-04", "2026-05-04", "2026-05-04", "2026-05-04", "2026-05-04", "2026-05-04", "2026-05-04", "2026-05-04", "2026-05-04", "2026-05-04", "2026-05-05", "2026-05-05"], "y": [-24.6, -24.6, -24.6, -24.6, -24.6, -24.6, -24.6, -24.6, -24.6, -24.6, -24.6, -24.6, -24.6, -24.6, -24.6, -24.6, -24.6, -24.6, -24.6, -24.6, -24.6, -24.4, -24.4, -24.4, -24.4, -24.4, -24.4, -24.4, -24.4, -24.4], "type": "scatter", "mode": "lines+markers", "name": "Max DD", "line": {"color": "#ff4757", "width": 2}, "yaxis": "y2"}];
+        var historyLayout = {
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: {color: '#e0e0e0'},
+            xaxis: {gridcolor: '#2a2a4a', title: 'Fecha'},
+            yaxis: {gridcolor: '#2a2a4a', title: 'WR Avg (%)'},
+            yaxis2: {
+                title: 'Max DD (%)',
+                overlaying: 'y',
+                side: 'right',
+                gridcolor: '#2a2a4a'
+            },
+            legend: {orientation: 'h', y: -0.25},
+            margin: {t: 30, b: 60}
+        };
+        Plotly.newPlot('history-chart', historyData, historyLayout, {responsive: true});
+
+        // Auto-refresh cada 5 minutos
+        var refreshTimer = setTimeout(function() { location.reload(); }, 300000);
+        // Mostrar cuenta regresiva
+        var countdown = 300;
+        var countEl = document.getElementById('refresh-countdown');
+        if (countEl) {
+            setInterval(function() {
+                countdown--;
+                var m = Math.floor(countdown / 60), s = countdown % 60;
+                countEl.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+                if (countdown <= 0) countdown = 300;
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
